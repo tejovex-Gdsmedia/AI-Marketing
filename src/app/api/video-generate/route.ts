@@ -120,9 +120,56 @@ export async function POST(request: NextRequest) {
 
     // ─── JOGG AI ─────────────────────────────────────────────────
     else if (model.provider === 'jogg') {
-      return NextResponse.json({
-        error: 'Jogg AI avatar requires avatar_id and voice_id. Use the avatar flow.',
-      }, { status: 400 });
+      const joggKey = process.env.JOGG_AI_API_KEY;
+      if (!joggKey) return NextResponse.json({ error: 'JOGG_AI_API_KEY not configured' }, { status: 500 });
+
+      const { avatar_id, voice_id } = body;
+
+      if (!avatar_id) {
+        return NextResponse.json({ error: 'avatar_id is required for Jogg AI' }, { status: 400 });
+      }
+
+      const aspectRatioMap: Record<string, number> = {
+        '16:9': 1,
+        '9:16': 2,
+        '1:1': 3,
+      };
+
+      const joggPayload = {
+        avatar_id: parseInt(String(avatar_id), 10),
+        script: prompt,
+        aspect_ratio: aspectRatioMap[aspectRatio || '16:9'] || 1,
+      };
+
+      if (voice_id) {
+        (joggPayload as Record<string, unknown>).voice_id = voice_id;
+      }
+
+      const joggRes = await fetch('https://api.jogg.ai/v1/create', {
+        method: 'POST',
+        headers: {
+          'x-api-key': joggKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(joggPayload),
+      });
+
+      if (!joggRes.ok) {
+        const errText = await joggRes.text();
+        console.error(`Jogg AI error: ${joggRes.status} - ${errText}`);
+        return NextResponse.json({
+          error: `Jogg AI error: ${joggRes.status} - ${errText}`
+        }, { status: 500 });
+      }
+
+      const joggData = await joggRes.json();
+      jobId = joggData.data?.video_id;
+
+      if (!jobId) {
+        return NextResponse.json({
+          error: 'No video_id returned from Jogg AI'
+        }, { status: 500 });
+      }
     }
 
     else {

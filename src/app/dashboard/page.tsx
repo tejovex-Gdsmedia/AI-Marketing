@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { DashboardOverview } from '@/components/dashboard/dashboard-overview'
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -62,6 +63,8 @@ type ActiveSection =
   | 'seo_dashboard'
   | 'image_generation'
   | 'video_generation'
+  | 'advanced_video_generator'
+  | 'overview'
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
@@ -149,6 +152,8 @@ export default function DashboardPage() {
     seo_dashboard: '🔍',
     image_generation: '🖼',
     video_generation: '🎬',
+    advanced_video_generator: '🎬',
+    overview: '📈',
   }
 
   const sectionLabels: Record<string, string> = {
@@ -158,6 +163,8 @@ export default function DashboardPage() {
     seo_dashboard: 'SEO Dashboard',
     image_generation: 'Image Generation',
     video_generation: 'Video Generation',
+    advanced_video_generator: 'Advanced Generator',
+    overview: 'Dashboard Overview',
   }
 
   return (
@@ -204,6 +211,22 @@ export default function DashboardPage() {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-2">
+
+          {/* Overview Button */}
+          <button
+            onClick={() => setActiveSection('overview')}
+            className={`
+              w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+              transition-colors
+              ${activeSection === 'overview' ? 'text-amber-400 bg-amber-400/10' : 'text-white/60 hover:text-white hover:bg-white/5'}
+            `}
+          >
+            <span className="text-base shrink-0">📈</span>
+            {sidebarOpen && <span className="flex-1 text-left">Dashboard Overview</span>}
+          </button>
+
+          {/* Divider */}
+          <div className="h-px bg-white/[0.06] my-2" />
 
           {/* Research Accordion */}
           <div>
@@ -303,6 +326,19 @@ export default function DashboardPage() {
                     {sidebarOpen && <span className="flex-1 text-left">{sectionLabels[section]}</span>}
                   </button>
                 ))}
+                <button
+                  onClick={() => setActiveSection('advanced_video_generator')}
+                  className={`
+                    w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm
+                    transition-colors
+                    ${activeSection === 'advanced_video_generator'
+                      ? 'text-amber-400 bg-amber-400/10 font-medium'
+                      : 'text-white/50 hover:text-white hover:bg-white/5'}
+                  `}
+                >
+                  <span className="text-sm shrink-0">🎬</span>
+                  {sidebarOpen && <span className="flex-1 text-left">Advanced Generator</span>}
+                </button>
               </div>
             )}
           </div>
@@ -341,13 +377,25 @@ export default function DashboardPage() {
         )}
 
         {/* Page Title */}
-        <div className="px-8 py-6 border-b border-white/[0.06]">
-          <h1 className="text-lg font-semibold text-white">{sectionLabels[activeSection]}</h1>
-          <p className="text-xs text-white/40 mt-0.5">
-            {contentSections.includes(activeSection)
-              ? `Generate ${activeSection === 'image_generation' ? 'images' : 'video concepts'} using AI — powered by your research insights`
-              : `AI-powered ${sectionLabels[activeSection].toLowerCase()} for ${companyName}`}
-          </p>
+        <div className="px-8 py-6 border-b border-white/[0.06] flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-white">{sectionLabels[activeSection]}</h1>
+            <p className="text-xs text-white/40 mt-0.5">
+              {contentSections.includes(activeSection)
+                ? `Generate ${activeSection === 'image_generation' ? 'images' : 'video concepts'} using AI — powered by your research insights`
+                : `AI-powered ${sectionLabels[activeSection].toLowerCase()} for ${companyName}`}
+            </p>
+          </div>
+          <a
+            href="/"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors text-sm font-medium"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            Home
+          </a>
         </div>
 
         {/* Content */}
@@ -361,6 +409,16 @@ export default function DashboardPage() {
             </div>
           ) : (
             <>
+              {/* Dashboard Overview */}
+              {activeSection === 'overview' && (
+                <DashboardOverview
+                  companyName={companyName}
+                  onGenerateVideo={() => setActiveSection('advanced_video_generator')}
+                  onGenerateImage={() => setActiveSection('image_generation')}
+                  onViewAnalytics={() => setActiveSection('marketing_research')}
+                />
+              )}
+
               {/* Research Sections */}
               {activeSection === 'marketing_research' && (
                 hasResult('marketing_research')
@@ -393,6 +451,13 @@ export default function DashboardPage() {
               )}
               {activeSection === 'video_generation' && (
                 <VideoGenerationView
+                  companyName={companyName}
+                  research={results['marketing_research']?.result as ResearchResult}
+                  content={results['content_creation']?.result as ContentResult}
+                />
+              )}
+              {activeSection === 'advanced_video_generator' && (
+                <AdvancedVideoGeneratorView
                   companyName={companyName}
                   research={results['marketing_research']?.result as ResearchResult}
                   content={results['content_creation']?.result as ContentResult}
@@ -1221,6 +1286,547 @@ function SeoView({ data }: { data: SeoResult }) {
           ))}
         </div>
       </Card>
+    </div>
+  )
+}
+
+// ─── Advanced Video Generator View ────────────────────────────────────────
+
+type VideoType = 'avatar' | 'text_to_video' | 'image_to_video'
+type GenerationStatus = 'idle' | 'generating' | 'polling' | 'completed' | 'failed'
+
+type VideoModel = {
+  id: string
+  providerModelId: string
+  name: string
+  company: string
+  description: string
+  types: VideoType[]
+  tier: 'premium' | 'standard' | 'budget'
+  badge?: string
+  pricePerVideo?: number
+  pricePerSecond?: number
+  resolution: string
+  maxDuration: number
+  nativeAudio?: boolean
+}
+
+const VIDEO_MODELS: VideoModel[] = [
+  { id: 'kling-3.0', providerModelId: 'kling-3.0', name: 'Kling 3.0', company: 'Kuaishou', description: 'Advanced motion and realistic physics', types: ['text_to_video', 'image_to_video'], tier: 'premium', badge: 'Latest', pricePerSecond: 0.12, resolution: '1080p', maxDuration: 30 },
+  { id: 'veo-3-fast', providerModelId: 'veo-3-fast', name: 'Veo 3 Fast', company: 'Google', description: 'Fast cinematic video generation', types: ['text_to_video', 'image_to_video'], tier: 'premium', badge: 'Fast', pricePerSecond: 0.35, resolution: '1080p', maxDuration: 10 },
+  { id: 'runway-gen-4-turbo', providerModelId: 'runway-gen-4-turbo', name: 'Runway Gen-4 Turbo', company: 'Runway', description: 'Turbo mode for faster generation', types: ['text_to_video', 'image_to_video'], tier: 'premium', badge: 'Turbo', pricePerVideo: 1.5, resolution: '1080p', maxDuration: 15 },
+  { id: 'minimax-h3', providerModelId: 'minimax-h3', name: 'MiniMax H3', company: 'MiniMax', description: 'High-quality motion with H3 engine', types: ['text_to_video', 'image_to_video'], tier: 'standard', pricePerSecond: 0.1, resolution: '1080p', maxDuration: 20 },
+  { id: 'seedance-2.0', providerModelId: 'seedance-2.0', name: 'Seedance 2.0', company: 'ByteDance', description: 'Smooth dance and motion generation', types: ['text_to_video', 'image_to_video'], tier: 'standard', pricePerSecond: 0.09, resolution: '1080p', maxDuration: 25 },
+  { id: 'luma-ray-3', providerModelId: 'luma-ray-3', name: 'Luma Ray 3', company: 'Luma AI', description: 'Ray-traced realistic video generation', types: ['text_to_video', 'image_to_video'], tier: 'premium', pricePerSecond: 0.15, resolution: '1080p', maxDuration: 20 },
+  { id: 'wan-2.7', providerModelId: 'wan-2.7', name: 'Wan 2.7', company: 'Alibaba', description: 'Wide-angle video synthesis', types: ['text_to_video', 'image_to_video'], tier: 'standard', pricePerSecond: 0.08, resolution: '1080p', maxDuration: 18 },
+  { id: 'pika-2.2', providerModelId: 'pika-2.2', name: 'Pika 2.2', company: 'Pika Labs', description: 'Fast creative video with enhanced quality', types: ['text_to_video', 'image_to_video'], tier: 'standard', pricePerVideo: 0.6, resolution: '1080p', maxDuration: 15 },
+  { id: 'hailuo-2.3', providerModelId: 'hailuo-2.3', name: 'Hailuo 2.3', company: 'MiniMax', description: 'High-fidelity video generation', types: ['text_to_video', 'image_to_video'], tier: 'standard', pricePerSecond: 0.11, resolution: '1080p', maxDuration: 22 },
+  { id: 'stable-video-diffusion', providerModelId: 'stable-video-diffusion', name: 'Stable Video Diffusion', company: 'Stability AI', description: 'Stable and consistent video diffusion', types: ['text_to_video', 'image_to_video'], tier: 'budget', pricePerVideo: 0.25, resolution: '1080p', maxDuration: 25 },
+  { id: 'jogg-ai', providerModelId: 'jogg-ai', name: 'Jogg AI', company: 'Jogg', description: 'Professional avatar video generation', types: ['avatar'], tier: 'premium', badge: 'Avatar', pricePerVideo: 2.5, resolution: '1080p', maxDuration: 10 },
+]
+
+const TIER_COLORS: Record<string, string> = {
+  premium: 'border-amber-400 text-amber-400',
+  standard: 'border-blue-400 text-blue-400',
+  budget: 'border-emerald-400 text-emerald-400',
+}
+
+const TIER_BORDER: Record<string, string> = {
+  premium: 'border-l-amber-400',
+  standard: 'border-l-blue-400',
+  budget: 'border-l-emerald-400',
+}
+
+const DURATIONS = [5, 8, 10, 15]
+const ASPECT_RATIOS = ['16:9', '9:16', '1:1']
+
+function AdvancedVideoGeneratorView({
+  companyName,
+  research,
+  content,
+}: {
+  companyName: string
+  research?: ResearchResult
+  content?: ContentResult
+}) {
+  const [activeFilter, setActiveFilter] = useState<'all' | VideoType>('all')
+  const [selectedModel, setSelectedModel] = useState<VideoModel | null>(null)
+  const [prompt, setPrompt] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false)
+  const [conceptInput, setConceptInput] = useState('')
+  const [duration, setDuration] = useState(5)
+  const [aspectRatio, setAspectRatio] = useState('16:9')
+  const [status, setStatus] = useState<GenerationStatus>('idle')
+  const [jobId, setJobId] = useState<string | null>(null)
+  const [provider, setProvider] = useState<string | null>(null)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [avatars, setAvatars] = useState<Array<{ avatar_id: number; name: string; cover_url: string }>>([])
+  const [selectedAvatarId, setSelectedAvatarId] = useState<number | null>(null)
+  const [loadingAvatars, setLoadingAvatars] = useState(false)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const TYPE_FILTERS: { label: string; value: 'all' | VideoType }[] = [
+    { label: 'All Models', value: 'all' },
+    { label: 'Avatar', value: 'avatar' },
+    { label: 'Text to Video', value: 'text_to_video' },
+    { label: 'Image to Video', value: 'image_to_video' },
+  ]
+
+  const estimateCost = (model: VideoModel, duration: number) =>
+    model.pricePerVideo ?? (model.pricePerSecond ?? 0) * duration
+  const usdToInr = (usd: number) => Math.round(usd * 95.94 * 100) / 100
+
+  const filteredModels = VIDEO_MODELS.filter((m) =>
+    activeFilter === 'all' ? true : m.types.includes(activeFilter as VideoType)
+  )
+
+  const estimatedUSD = selectedModel ? estimateCost(selectedModel, duration) : 0
+  const estimatedINR = usdToInr(estimatedUSD)
+
+  useEffect(() => {
+    if (status === 'polling' && jobId && provider && selectedModel) {
+      pollRef.current = setInterval(async () => {
+        try {
+          const res = await fetch(
+            `/api/video-status?jobId=${jobId}&provider=${provider}&modelId=${selectedModel.providerModelId}`
+          )
+          const data = await res.json()
+
+          if (data.status === 'completed') {
+            clearInterval(pollRef.current!)
+            setVideoUrl(data.videoUrl)
+            setStatus('completed')
+          } else if (data.status === 'failed') {
+            clearInterval(pollRef.current!)
+            setError(data.error || 'Generation failed')
+            setStatus('failed')
+          }
+        } catch {
+          clearInterval(pollRef.current!)
+          setError('Failed to check status')
+          setStatus('failed')
+        }
+      }, 4000)
+    }
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+  }, [status, jobId, provider, selectedModel])
+
+  // Fetch avatars when Jogg AI is selected
+  useEffect(() => {
+    if (selectedModel?.id === 'jogg-ai') {
+      setLoadingAvatars(true)
+      fetch('/api/jogg-avatars')
+        .then(res => res.json())
+        .then(data => {
+          console.log('Avatar response:', data)
+          if (data.data && Array.isArray(data.data)) {
+            setAvatars(data.data)
+            // Set default avatar if available
+            if (data.data.length > 0 && !selectedAvatarId) {
+              setSelectedAvatarId(data.data[0].avatar_id)
+            }
+          } else if (data.error) {
+            console.error('Avatar fetch error:', data.error)
+            setError(`Avatar loading error: ${data.error}`)
+          } else {
+            console.error('Unexpected response format:', data)
+            setError('Unexpected response format from avatars API')
+          }
+          setLoadingAvatars(false)
+        })
+        .catch(err => {
+          console.error('Failed to fetch avatars:', err)
+          setError(`Failed to fetch avatars: ${err.message}`)
+          setLoadingAvatars(false)
+        })
+    }
+  }, [selectedModel?.id])
+
+  async function handleGenerateConcept() {
+    if (!conceptInput.trim()) return
+    setIsGeneratingPrompt(true)
+    try {
+      const res = await fetch('/api/generate-video-concept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_name: companyName,
+          brief: conceptInput,
+          video_type: 'brand_ad',
+          research_context: {
+            audience: research?.target_audience?.primary || '',
+            pain_points: research?.target_audience?.pain_points || [],
+            value_proposition: research?.value_proposition || '',
+          },
+          content_context: {
+            brand_voice: content?.brand_voice || '',
+            content_pillars: content?.content_pillars || [],
+          },
+        }),
+      })
+      const data = await res.json()
+      if (data.result?.script) {
+        setPrompt(data.result.script)
+      } else if (data.result?.prompt) {
+        setPrompt(data.result.prompt)
+      }
+    } catch (err) {
+      console.error('Failed to generate prompt:', err)
+    } finally {
+      setIsGeneratingPrompt(false)
+    }
+  }
+
+  async function handleGenerate() {
+    if (!selectedModel || !prompt.trim()) return
+    setStatus('generating')
+    setError(null)
+    setVideoUrl(null)
+
+    try {
+      const payload: Record<string, unknown> = {
+        modelId: selectedModel.id,
+        prompt: prompt.trim(),
+        imageUrl: imageUrl.trim() || undefined,
+        duration,
+        aspectRatio,
+        userId: 'user_id_here',
+      }
+
+      // Add avatar_id for Jogg AI
+      if (selectedModel.id === 'jogg-ai') {
+        if (!selectedAvatarId) {
+          setError('Please select an avatar')
+          setStatus('failed')
+          return
+        }
+        payload.avatar_id = selectedAvatarId
+      }
+
+      const res = await fetch('/api/video-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      setJobId(data.jobId)
+      setProvider(data.provider)
+      setStatus('polling')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Generation failed'
+      setError(message)
+      setStatus('failed')
+    }
+  }
+
+  function handleReset() {
+    setStatus('idle')
+    setJobId(null)
+    setVideoUrl(null)
+    setError(null)
+    setProvider(null)
+  }
+
+  return (
+    <div>
+      {/* Context Banner */}
+      {research && (
+        <div className="bg-amber-400/5 border border-amber-400/10 rounded-2xl p-4 mb-6">
+          <p className="text-xs text-amber-400/70 font-medium mb-2 uppercase tracking-wider">Auto-loaded context</p>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs text-white/40 mb-1">Company</p>
+              <p className="text-sm text-white font-medium">{companyName}</p>
+            </div>
+            <div>
+              <p className="text-xs text-white/40 mb-1">Audience</p>
+              <p className="text-sm text-white/70 truncate">{research.target_audience?.primary}</p>
+            </div>
+            <div>
+              <p className="text-xs text-white/40 mb-1">Pain Points</p>
+              <p className="text-sm text-white/70 truncate">{research.target_audience?.pain_points?.[0]}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-4 gap-2 mb-6">
+        {TYPE_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => {
+              setActiveFilter(f.value)
+              const models = VIDEO_MODELS.filter((model) =>
+                f.value === 'all' ? true : model.types.includes(f.value as VideoType)
+              )
+              setSelectedModel(models[0] ?? null)
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              activeFilter === f.value
+                ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
+                : 'text-white/50 hover:text-white bg-white/5 border border-white/10'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        {/* Model List */}
+        <div className="col-span-1 max-h-96 overflow-y-auto space-y-2 pr-2">
+          {filteredModels.map((model) => (
+            <button
+              key={model.id}
+              onClick={() => setSelectedModel(model)}
+              className={`w-full text-left p-3 rounded-lg border transition-all ${
+                selectedModel?.id === model.id
+                  ? 'bg-amber-400/10 border border-amber-400/30'
+                  : `bg-white/[0.03] border border-white/10 hover:border-white/20 ${TIER_BORDER[model.tier]}`
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-xs text-white">{model.name}</span>
+                    {model.badge && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${TIER_COLORS[model.tier]}`}>
+                        {model.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-white/40 mt-0.5">{model.company}</p>
+                  <p className="text-[11px] text-white/30 mt-1 leading-relaxed">{model.description}</p>
+                </div>
+              </div>
+              <div className="flex gap-1 mt-2">
+                {model.types.map((t) => (
+                  <span key={t} className="text-[10px] bg-white/5 text-white/40 px-1.5 py-0.5 rounded">
+                    {t === 'avatar' ? 'Avatar' : t === 'text_to_video' ? 'T2V' : 'I2V'}
+                  </span>
+                ))}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Generation Form */}
+        <div className="col-span-2">
+          {!selectedModel ? (
+            <div className="flex items-center justify-center h-96 text-white/40">
+              Select a model to get started
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Selected model info */}
+              <div className="p-4 bg-white/[0.02] border border-white/10 rounded-lg">
+                <h3 className="font-semibold text-sm text-white">{selectedModel.name}</h3>
+                <p className="text-xs text-white/40 mt-1">
+                  {selectedModel.company} · {selectedModel.resolution} · Max {selectedModel.maxDuration}s
+                </p>
+              </div>
+
+              {/* Avatar Selection for Jogg AI */}
+              {selectedModel.id === 'jogg-ai' && (
+                <div>
+                  <label className="block text-xs font-medium text-white/60 mb-2">Select Avatar</label>
+                  {loadingAvatars ? (
+                    <div className="flex items-center justify-center py-8 text-white/40">
+                      <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mr-2" />
+                      Loading avatars...
+                    </div>
+                  ) : avatars.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-3 max-h-48 overflow-y-auto pr-2">
+                      {avatars.map((avatar) => (
+                        <button
+                          key={avatar.avatar_id}
+                          onClick={() => setSelectedAvatarId(avatar.avatar_id)}
+                          className={`flex flex-col items-center gap-2 p-2 rounded-lg border transition-all ${
+                            selectedAvatarId === avatar.avatar_id
+                              ? 'bg-amber-400/20 border-amber-400/50'
+                              : 'bg-white/5 border-white/10 hover:border-white/20'
+                          }`}
+                        >
+                          <img
+                            src={avatar.cover_url}
+                            alt={avatar.name}
+                            className="w-16 h-16 rounded-lg object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://via.placeholder.com/64?text=' + avatar.name.charAt(0)
+                            }}
+                          />
+                          <span className="text-xs text-white text-center truncate max-w-full">{avatar.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-lg bg-red-900/20 border border-red-700/40">
+                      <p className="text-xs text-red-400">Failed to load avatars</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Prompt */}
+              <div>
+                <label className="block text-xs font-medium text-white/60 mb-2">
+                  {selectedModel.types.includes('avatar') ? 'Script' : 'Prompt'}
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={conceptInput}
+                    onChange={(e) => setConceptInput(e.target.value)}
+                    placeholder="Describe your video idea..."
+                    className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30"
+                  />
+                  <button
+                    onClick={handleGenerateConcept}
+                    disabled={isGeneratingPrompt || !conceptInput.trim()}
+                    className="px-3 py-2 bg-white/5 border border-white/10 text-xs text-white/60 hover:text-white rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {isGeneratingPrompt ? '...' : 'Auto-Gen'}
+                  </button>
+                </div>
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  rows={3}
+                  placeholder={
+                    selectedModel.types.includes('avatar')
+                      ? 'Write the script your avatar will speak...'
+                      : 'Describe the video you want to generate...'
+                  }
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30 resize-none"
+                />
+              </div>
+
+              {/* Image URL */}
+              {(selectedModel.types.includes('image_to_video') || selectedModel.types.includes('text_to_video')) &&
+                !selectedModel.types.includes('avatar') && (
+                  <div>
+                    <label className="block text-xs font-medium text-white/60 mb-2">Image URL (optional)</label>
+                    <input
+                      type="url"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30"
+                    />
+                  </div>
+                )}
+
+              {/* Duration + Aspect Ratio */}
+              {!selectedModel.types.includes('avatar') && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-white/60 mb-2">Duration (seconds)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={duration}
+                        onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
+                        min="1"
+                        max={selectedModel.maxDuration * 2}
+                        className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30"
+                      />
+                      <span className="text-xs text-white/40 px-2 py-2">Max: {selectedModel.maxDuration}s</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-white/60 mb-2">Aspect Ratio</label>
+                    <div className="flex gap-1">
+                      {ASPECT_RATIOS.map((ar) => (
+                        <button
+                          key={ar}
+                          onClick={() => setAspectRatio(ar)}
+                          className={`flex-1 py-1.5 rounded text-xs font-medium transition-colors ${
+                            aspectRatio === ar
+                              ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
+                              : 'bg-white/5 border border-white/10 text-white/60 hover:text-white'
+                          }`}
+                        >
+                          {ar}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Cost Preview */}
+              <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-white/40">Estimated cost</p>
+                  <p className="text-sm font-bold text-white mt-0.5">
+                    ₹{estimatedINR}
+                    <span className="text-xs font-normal text-white/40 ml-1">(${estimatedUSD})</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Generate Button */}
+              {status === 'idle' || status === 'failed' ? (
+                <button
+                  onClick={handleGenerate}
+                  disabled={!prompt.trim()}
+                  className="w-full py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold text-sm rounded-lg transition-opacity"
+                >
+                  Generate Video
+                </button>
+              ) : status === 'generating' || status === 'polling' ? (
+                <div className="w-full py-2.5 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs text-white/60">
+                    {status === 'generating' ? 'Submitting...' : 'Generating...'}
+                  </span>
+                </div>
+              ) : null}
+
+              {/* Error */}
+              {status === 'failed' && error && (
+                <div className="bg-red-900/20 border border-red-700/40 rounded-lg p-3">
+                  <p className="text-xs text-red-400">{error}</p>
+                  <button onClick={handleReset} className="text-xs text-red-300 underline mt-1">
+                    Try again
+                  </button>
+                </div>
+              )}
+
+              {/* Result */}
+              {status === 'completed' && videoUrl && (
+                <div className="space-y-2">
+                  <video src={videoUrl} controls autoPlay className="w-full rounded-lg border border-white/10" />
+                  <div className="flex gap-2">
+                    <a
+                      href={videoUrl}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 bg-amber-400/20 text-amber-400 text-xs font-medium rounded-lg text-center hover:bg-amber-400/30 transition-colors"
+                    >
+                      Download
+                    </a>
+                    <button
+                      onClick={handleReset}
+                      className="flex-1 py-2 bg-white/5 border border-white/10 text-white/60 text-xs font-medium rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      Generate Another
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

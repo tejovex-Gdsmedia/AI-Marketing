@@ -76,6 +76,50 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ status: 'pending' });
     }
 
+    // ─── JOGG AI STATUS ──────────────────────────────────────────
+    if (provider === 'jogg') {
+      const joggKey = process.env.JOGG_AI_API_KEY;
+      if (!joggKey) {
+        return NextResponse.json({ error: 'JOGG_AI_API_KEY not configured' }, { status: 500 });
+      }
+
+      const statusRes = await fetch(
+        `https://api.jogg.ai/v1/video?video_id=${jobId}`,
+        {
+          headers: {
+            'x-api-key': joggKey,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!statusRes.ok) {
+        const errText = await statusRes.text();
+        console.error(`Jogg AI status error: ${statusRes.status} - ${errText}`);
+        return NextResponse.json(
+          { error: `Jogg AI status check failed: ${errText}` },
+          { status: 500 }
+        );
+      }
+
+      const statusData = await statusRes.json();
+      const videoStatus = statusData.data?.status;
+      const videoUrl = statusData.data?.video_url;
+
+      if (videoStatus === 'completed') {
+        return NextResponse.json({ status: 'completed', videoUrl });
+      }
+
+      if (videoStatus === 'failed' || videoStatus === 'error') {
+        return NextResponse.json({
+          status: 'failed',
+          error: statusData.data?.error || 'Video generation failed',
+        });
+      }
+
+      return NextResponse.json({ status: 'pending', progress: statusData.data?.progress || 0 });
+    }
+
     return NextResponse.json({ error: 'Unknown provider' }, { status: 400 });
   } catch (error) {
     console.error('Status check error:', error);
