@@ -1,0 +1,558 @@
+<title>Launchpad Wallet System</title>
+<style>
+  :root {
+    --color-bg: #0A0A0B;
+    --color-surface: #111114;
+    --color-border: rgba(255, 255, 255, 0.06);
+    --color-text: #FFFFFF;
+    --color-text-secondary: rgba(255, 255, 255, 0.6);
+    --color-text-tertiary: rgba(255, 255, 255, 0.4);
+    --color-accent: #FBBF24;
+    --color-accent-light: rgba(251, 191, 36, 0.1);
+    --color-success: #10B981;
+    --color-success-light: rgba(16, 185, 129, 0.1);
+    --color-warning: #F59E0B;
+    --color-warning-light: rgba(245, 158, 11, 0.1);
+    --color-error: #EF4444;
+    --color-error-light: rgba(239, 68, 68, 0.1);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --color-bg: #FFFFFF;
+      --color-surface: #F9FAFB;
+      --color-border: rgba(0, 0, 0, 0.06);
+      --color-text: #000000;
+      --color-text-secondary: rgba(0, 0, 0, 0.6);
+      --color-text-tertiary: rgba(0, 0, 0, 0.4);
+      --color-accent: #F59E0B;
+      --color-accent-light: rgba(245, 158, 11, 0.1);
+    }
+  }
+
+  :root[data-theme="light"] {
+    --color-bg: #FFFFFF;
+    --color-surface: #F9FAFB;
+    --color-border: rgba(0, 0, 0, 0.06);
+    --color-text: #000000;
+    --color-text-secondary: rgba(0, 0, 0, 0.6);
+    --color-text-tertiary: rgba(0, 0, 0, 0.4);
+    --color-accent: #F59E0B;
+    --color-accent-light: rgba(245, 158, 11, 0.1);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 40px;
+    margin-bottom: 16px;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 24px;
+    margin-bottom: 12px;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  p {
+    margin-bottom: 16px;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+  }
+
+  ul {
+    margin-left: 20px;
+    margin-bottom: 16px;
+  }
+
+  li {
+    margin-bottom: 8px;
+    color: var(--color-text-secondary);
+  }
+
+  code {
+    background: var(--color-surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 13px;
+    color: var(--color-accent);
+  }
+
+  .hero {
+    margin-bottom: 48px;
+    padding: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+  }
+
+  .hero p {
+    font-size: 18px;
+    color: var(--color-text);
+    margin-bottom: 12px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .card {
+    padding: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+  }
+
+  .card h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--color-accent);
+  }
+
+  .card p {
+    font-size: 14px;
+    color: var(--color-text-tertiary);
+    margin-bottom: 8px;
+  }
+
+  .code-block {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    margin-bottom: 24px;
+  }
+
+  .code-block code {
+    color: var(--color-text-secondary);
+    background: none;
+    padding: 0;
+    font-size: 12px;
+  }
+
+  .feature-list {
+    list-style: none;
+    margin: 0;
+  }
+
+  .feature-list li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    gap: 12px;
+    margin-left: 0;
+  }
+
+  .feature-list li:last-child {
+    border-bottom: none;
+  }
+
+  .feature-list li::before {
+    content: "✓";
+    color: var(--color-success);
+    font-weight: 600;
+    min-width: 20px;
+  }
+
+  .pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+
+  .pricing-table th {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 2px solid var(--color-border);
+    color: var(--color-accent);
+    font-weight: 600;
+    background: var(--color-surface);
+  }
+
+  .pricing-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+  }
+
+  .pricing-table tr:hover td {
+    background: var(--color-surface);
+  }
+
+  .highlight {
+    padding: 16px;
+    border-left: 4px solid var(--color-accent);
+    background: var(--color-accent-light);
+    border-radius: 4px;
+    margin-bottom: 24px;
+  }
+
+  .highlight p {
+    margin: 0;
+    color: var(--color-text);
+  }
+
+  .flow-diagram {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .flow-step:last-child {
+    margin-bottom: 0;
+  }
+
+  .flow-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: var(--color-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .flow-content {
+    flex: 1;
+  }
+
+  .flow-content h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-accent);
+    margin-bottom: 4px;
+  }
+
+  .flow-content p {
+    font-size: 13px;
+    color: var(--color-text-tertiary);
+    margin: 0;
+  }
+
+  .api-endpoint {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    font-family: "Monaco", monospace;
+    font-size: 12px;
+  }
+
+  .api-method {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  .footer {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+    color: var(--color-text-tertiary);
+    font-size: 12px;
+  }
+
+  @media (max-width: 640px) {
+    h1 {
+      font-size: 24px;
+    }
+
+    h2 {
+      font-size: 18px;
+    }
+
+    .container {
+      padding: 24px 16px;
+    }
+
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="container">
+  <h1>💳 Launchpad Wallet System</h1>
+  <p>A comprehensive payment system for video generation with prepaid wallet credits</p>
+
+  <div class="hero">
+    <p>✨ Users prepay via wallet funds instead of real-time payment processing. Funds are deducted instantly when they generate videos, with automatic tracking of costs, commissions, and spending history.</p>
+  </div>
+
+  <h2>System Overview</h2>
+
+  <div class="highlight">
+    <p><strong>Commission Rate:</strong> 20% on top of API costs (configurable in <code>wallet-service.ts</code>)</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h4>User Wallet</h4>
+      <p>Each user has a dedicated wallet balance. Add funds at any time and your balance is immediately available for video generation.</p>
+    </div>
+    <div class="card">
+      <h4>Instant Deduction</h4>
+      <p>When you generate a video, the total cost (API + commission) is deducted from your wallet in real-time.</p>
+    </div>
+    <div class="card">
+      <h4>Transaction History</h4>
+      <p>All credits and debits are recorded with detailed descriptions, allowing you to track spending and understand costs.</p>
+    </div>
+    <div class="card">
+      <h4>Cost Breakdown</h4>
+      <p>Every video generation shows the API cost separately from your commission, so you see exactly what you're paying.</p>
+    </div>
+  </div>
+
+  <h2>How It Works</h2>
+
+  <div class="flow-diagram">
+    <div class="flow-step">
+      <div class="flow-number">1</div>
+      <div class="flow-content">
+        <h4>Add Funds</h4>
+        <p>User navigates to the Wallet section and adds funds (e.g., $100). Balance updates immediately.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">2</div>
+      <div class="flow-content">
+        <h4>Select Model & Generate</h4>
+        <p>User selects a video model and starts generation. System calculates total cost: API cost + 20% commission.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">3</div>
+      <div class="flow-content">
+        <h4>Check Balance</h4>
+        <p>System checks if wallet has sufficient balance. If yes, proceeds. If no, shows error and blocks generation.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">4</div>
+      <div class="flow-content">
+        <h4>Deduct & Record</h4>
+        <p>Cost is deducted from wallet and a transaction record is created linking the video generation to the debit.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">5</div>
+      <div class="flow-content">
+        <h4>View History</h4>
+        <p>User can view complete transaction history with timestamps, amounts, and descriptions.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Cost Calculation Example</h2>
+
+  <table class="pricing-table">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Amount</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Kling 3.0 (10 seconds)</strong></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td style="padding-left: 32px;">API Cost</td>
+        <td><strong>$1.00</strong></td>
+        <td>$0.10/sec × 10 sec</td>
+      </tr>
+      <tr>
+        <td style="padding-left: 32px;">Your Commission (20%)</td>
+        <td><strong>$0.20</strong></td>
+        <td>$1.00 × 0.20</td>
+      </tr>
+      <tr>
+        <td style="padding-left: 32px;"><strong>Total Cost</strong></td>
+        <td><strong>$1.20</strong></td>
+        <td>Deducted from wallet</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Database Schema</h2>
+
+  <p>Four main tables power the wallet system:</p>
+
+  <h3>Wallet Table</h3>
+  <div class="code-block">
+    <code>model Wallet {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  balance       Float    @default(0)      // Current available balance
+  totalAdded    Float    @default(0)      // Total funds added lifetime
+  totalSpent    Float    @default(0)      // Total funds spent lifetime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}</code>
+  </div>
+
+  <h3>Transaction Table</h3>
+  <div class="code-block">
+    <code>model Transaction {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   // "credit" or "debit"
+  amount        Float
+  description   String
+  balanceBefore Float   // Balance before this transaction
+  balanceAfter  Float   // Balance after this transaction
+  videoGenId    String? // Link to video generation if debit
+  createdAt     DateTime @default(now())
+}</code>
+  </div>
+
+  <h3>VideoGeneration Table</h3>
+  <div class="code-block">
+    <code>model VideoGeneration {
+  id            String   @id @default(cuid())
+  userId        String
+  modelId       String   // e.g., "kling-3.0"
+  modelName     String   // e.g., "Kling 3.0"
+  prompt        String
+  duration      Int      // In seconds
+  apiCost       Float    // Provider's cost
+  commission    Float    // Your 20% commission
+  totalCost     Float    // apiCost + commission
+  status        String   // "pending", "completed", "failed"
+  videoUrl      String?
+  createdAt     DateTime @default(now())
+}</code>
+  </div>
+
+  <h2>API Endpoints</h2>
+
+  <h3>Get Wallet & Transaction History</h3>
+  <div class="api-endpoint">
+    <div><span class="api-method">GET</span> /api/wallet?userId={userId}</div>
+    <div style="margin-top: 12px; font-size: 12px; color: var(--color-text-tertiary);">Returns wallet balance and transaction history (last 50 transactions)</div>
+  </div>
+
+  <h3>Add Funds to Wallet</h3>
+  <div class="api-endpoint">
+    <div><span class="api-method">POST</span> /api/wallet</div>
+    <div style="margin-top: 12px; font-size: 12px; color: var(--color-text-tertiary);">Body: { userId, amount, description }</div>
+  </div>
+
+  <h3>Deduct for Video Generation</h3>
+  <div class="api-endpoint">
+    <div><span class="api-method">POST</span> /api/wallet/deduct</div>
+    <div style="margin-top: 12px; font-size: 12px; color: var(--color-text-tertiary);">Body: { userId, apiCost, videoGenId } — Returns 402 if insufficient balance</div>
+  </div>
+
+  <h2>Features</h2>
+
+  <ul class="feature-list">
+    <li>Prepaid wallet system with persistent user balance</li>
+    <li>Automatic commission calculation (20% configurable)</li>
+    <li>Real-time balance checks before video generation</li>
+    <li>Complete transaction history with timestamps</li>
+    <li>Cost breakdown showing API cost vs commission</li>
+    <li>Insufficient balance detection (HTTP 402 response)</li>
+    <li>Transaction linking to video generations</li>
+    <li>Lifetime spending analytics (totalAdded, totalSpent)</li>
+    <li>Refund support for failed generations</li>
+    <li>Responsive wallet UI component</li>
+  </ul>
+
+  <h2>Implementation Files</h2>
+
+  <div class="card">
+    <h4>Core Service</h4>
+    <p><strong>File:</strong> <code>src/lib/wallet/wallet-service.ts</code></p>
+    <p>Core wallet functions: balance checks, credit/debit operations, cost calculations, refunds.</p>
+  </div>
+
+  <div class="card">
+    <h4>API Routes</h4>
+    <p><strong>Files:</strong> <code>src/app/api/wallet/route.ts</code>, <code>src/app/api/wallet/deduct/route.ts</code></p>
+    <p>REST endpoints for fetching wallet data and processing transactions.</p>
+  </div>
+
+  <div class="card">
+    <h4>UI Components</h4>
+    <p><strong>Files:</strong> <code>src/components/wallet/wallet-overview.tsx</code>, <code>src/components/wallet/cost-preview.tsx</code></p>
+    <p>React components for displaying wallet balance, adding funds, and previewing costs.</p>
+  </div>
+
+  <div class="card">
+    <h4>Integration</h4>
+    <p><strong>File:</strong> <code>src/components/wallet/video-generation-with-wallet.tsx</code></p>
+    <p>Wrapper component to integrate wallet checks into video generation flow.</p>
+  </div>
+
+  <h2>Next Steps</h2>
+
+  <ol style="margin-left: 20px;">
+    <li>Run <code>npx prisma migrate dev</code> to create wallet tables</li>
+    <li>Integrate wallet check into video generation API endpoint</li>
+    <li>Add WalletOverview component to dashboard</li>
+    <li>Set up payment gateway for adding funds (Stripe, etc.)</li>
+    <li>Configure commission rate based on your pricing strategy</li>
+    <li>Add wallet section to the dashboard sidebar</li>
+  </ol>
+
+  <div class="footer">
+    <p>Launchpad Wallet System v1.0 — Built for seamless video generation payments</p>
+  </div>
+</div>

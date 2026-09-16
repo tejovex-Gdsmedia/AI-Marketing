@@ -14,11 +14,59 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Wallet relations
+  wallet        Wallet?
+  transactions  Transaction[]
+  videoGeneration VideoGeneration[]
+}
+
+model Wallet {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance       Float    @default(0) // Balance in USD
+  totalAdded    Float    @default(0) // Total money added
+  totalSpent    Float    @default(0) // Total money spent
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Transaction {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String   // "credit" or "debit"
+  amount        Float    // Amount in USD
+  description   String
+  balanceBefore Float
+  balanceAfter  Float
+  videoGenId    String?  // Reference to video generation if this is a debit
+  createdAt     DateTime @default(now())
+}
+
+model VideoGeneration {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modelId       String   // e.g., "kling-3.0"
+  modelName     String   // e.g., "Kling 3.0"
+  prompt        String
+  duration      Int      // Duration in seconds
+  apiCost       Float    // Cost from API provider
+  commission    Float    // Your commission (apiCost * commissionRate)
+  totalCost     Float    // apiCost + commission
+  status        String   // "pending", "completed", "failed"
+  jobId         String?
+  provider      String?
+  videoUrl      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Post {
