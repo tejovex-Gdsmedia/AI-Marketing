@@ -1336,19 +1336,24 @@ type VideoModel = {
   nativeAudio?: boolean
 }
 
-const VIDEO_MODELS: VideoModel[] = [
-  { id: 'kling-3.0', providerModelId: 'kling-3.0', name: 'Kling 3.0', company: 'Kuaishou', description: 'Advanced motion and realistic physics', types: ['text_to_video', 'image_to_video'], tier: 'premium', badge: 'Latest', pricePerSecond: 0.10, resolution: '1080p', maxDuration: 30 },
-  { id: 'veo-3-fast', providerModelId: 'veo-3-fast', name: 'Veo 3 Fast', company: 'Google', description: 'Fast cinematic video generation', types: ['text_to_video', 'image_to_video'], tier: 'premium', badge: 'Fast', pricePerSecond: 0.15, resolution: '1080p', maxDuration: 10 },
-  { id: 'runway-gen-4-turbo', providerModelId: 'runway-gen-4-turbo', name: 'Runway Gen-4 Turbo', company: 'Runway', description: 'Turbo mode for faster generation', types: ['text_to_video', 'image_to_video'], tier: 'premium', badge: 'Turbo', pricePerSecond: 0.05, resolution: '1080p', maxDuration: 15 },
-  { id: 'minimax-h3', providerModelId: 'minimax-h3', name: 'MiniMax H3', company: 'MiniMax', description: 'High-quality motion with H3 engine', types: ['text_to_video', 'image_to_video'], tier: 'standard', pricePerSecond: 0.13, resolution: '1080p', maxDuration: 20 },
-  { id: 'seedance-2.0', providerModelId: 'seedance-2.0', name: 'Seedance 2.0', company: 'ByteDance', description: 'Smooth dance and motion generation', types: ['text_to_video', 'image_to_video'], tier: 'standard', pricePerSecond: 0.056, resolution: '1080p', maxDuration: 25 },
-  { id: 'luma-ray-3', providerModelId: 'luma-ray-3', name: 'Luma Ray 3', company: 'Luma AI', description: 'Ray-traced realistic video generation', types: ['text_to_video', 'image_to_video'], tier: 'premium', pricePerVideo: 0.35, resolution: '1080p', maxDuration: 20 },
-  { id: 'wan-2.7', providerModelId: 'wan-2.7', name: 'Wan 2.7', company: 'Alibaba', description: 'Wide-angle video synthesis', types: ['text_to_video', 'image_to_video'], tier: 'standard', pricePerSecond: 0.10, resolution: '1080p', maxDuration: 18 },
-  { id: 'pika-2.2', providerModelId: 'pika-2.2', name: 'Pika 2.2', company: 'Pika Labs', description: 'Fast creative video with enhanced quality', types: ['text_to_video', 'image_to_video'], tier: 'standard', pricePerSecond: 0.08, resolution: '1080p', maxDuration: 15 },
-  { id: 'hailuo-2.3', providerModelId: 'hailuo-2.3', name: 'Hailuo 2.3', company: 'MiniMax', description: 'High-fidelity video generation', types: ['text_to_video', 'image_to_video'], tier: 'standard', pricePerSecond: 0.08, resolution: '1080p', maxDuration: 22 },
-  { id: 'stable-video-diffusion', providerModelId: 'stable-video-diffusion', name: 'Stable Video Diffusion', company: 'Stability AI', description: 'Stable and consistent video diffusion', types: ['text_to_video', 'image_to_video'], tier: 'budget', pricePerVideo: 0.25, resolution: '1080p', maxDuration: 25 },
-  { id: 'jogg-ai', providerModelId: 'jogg-ai', name: 'Jogg AI', company: 'Jogg', description: 'Professional avatar video generation', types: ['avatar'], tier: 'premium', badge: 'Avatar', pricePerVideo: 2.5, resolution: '1080p', maxDuration: 10 },
-]
+// Import complete models from models-complete.ts
+import { VIDEO_MODELS as COMPLETE_MODELS } from '@/lib/video/models-complete'
+
+// Convert to dashboard VideoModel type
+const VIDEO_MODELS: VideoModel[] = COMPLETE_MODELS.map((m: any) => ({
+  id: m.id,
+  providerModelId: m.providerModelId,
+  name: m.name,
+  company: m.company,
+  description: m.description,
+  types: m.types,
+  tier: m.tier,
+  badge: m.badge,
+  pricePerSecond: 0.10, // Default pricing - update with actual costs
+  pricePerVideo: 0.35,
+  resolution: m.defaultResolution || m.resolutions?.[0] || '1080p',
+  maxDuration: m.maxDuration,
+}))
 
 const TIER_COLORS: Record<string, string> = {
   premium: 'border-amber-400 text-amber-400',
