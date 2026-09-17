@@ -1,0 +1,560 @@
+<title>Video Model Pricing Dashboard</title>
+<style>
+  :root {
+    --color-bg: #0A0A0B;
+    --color-surface: #111114;
+    --color-border: rgba(255, 255, 255, 0.06);
+    --color-text: #FFFFFF;
+    --color-text-secondary: rgba(255, 255, 255, 0.6);
+    --color-text-tertiary: rgba(255, 255, 255, 0.4);
+    --color-accent: #FBBF24;
+    --color-accent-light: rgba(251, 191, 36, 0.1);
+    --color-success: #10B981;
+    --color-success-light: rgba(16, 185, 129, 0.1);
+    --color-warning: #F59E0B;
+    --color-warning-light: rgba(245, 158, 11, 0.1);
+    --color-error: #EF4444;
+    --color-error-light: rgba(239, 68, 68, 0.1);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --color-bg: #FFFFFF;
+      --color-surface: #F9FAFB;
+      --color-border: rgba(0, 0, 0, 0.06);
+      --color-text: #000000;
+      --color-text-secondary: rgba(0, 0, 0, 0.6);
+      --color-text-tertiary: rgba(0, 0, 0, 0.4);
+      --color-accent: #F59E0B;
+      --color-accent-light: rgba(245, 158, 11, 0.1);
+      --color-success: #059669;
+      --color-success-light: rgba(5, 150, 105, 0.1);
+      --color-warning: #D97706;
+      --color-warning-light: rgba(217, 119, 6, 0.1);
+    }
+  }
+
+  :root[data-theme="light"] {
+    --color-bg: #FFFFFF;
+    --color-surface: #F9FAFB;
+    --color-border: rgba(0, 0, 0, 0.06);
+    --color-text: #000000;
+    --color-text-secondary: rgba(0, 0, 0, 0.6);
+    --color-text-tertiary: rgba(0, 0, 0, 0.4);
+    --color-accent: #F59E0B;
+    --color-accent-light: rgba(245, 158, 11, 0.1);
+    --color-success: #059669;
+    --color-success-light: rgba(5, 150, 105, 0.1);
+    --color-warning: #D97706;
+    --color-warning-light: rgba(217, 119, 6, 0.1);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 48px;
+    margin-bottom: 24px;
+    text-wrap: balance;
+  }
+
+  .hero {
+    margin-bottom: 48px;
+    padding: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+  }
+
+  .hero h1 {
+    margin-bottom: 12px;
+    margin-top: 0;
+  }
+
+  .hero p {
+    color: var(--color-text-secondary);
+    font-size: 16px;
+    margin: 0;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .stat-card {
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+  }
+
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .stat-card .value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  .models-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 48px;
+  }
+
+  .models-table thead {
+    background: var(--color-surface);
+    border-bottom: 2px solid var(--color-border);
+  }
+
+  .models-table th {
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .models-table td {
+    padding: 16px 12px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .models-table tbody tr:hover {
+    background: var(--color-surface);
+  }
+
+  .model-name {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge.premium {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+  }
+
+  .badge.standard {
+    background: var(--color-success-light);
+    color: var(--color-success);
+  }
+
+  .badge.budget {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+  }
+
+  .pricing {
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+
+  .duration {
+    color: var(--color-text-secondary);
+    font-size: 13px;
+  }
+
+  .features {
+    color: var(--color-text-tertiary);
+    font-size: 12px;
+  }
+
+  .cost-example {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+
+  .example-card {
+    padding: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+  }
+
+  .example-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+  }
+
+  .cost-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cost-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .cost-item.total {
+    border-bottom: none;
+    border-top: 2px solid var(--color-border);
+    padding-top: 12px;
+    margin-top: 4px;
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+
+  .cost-item .label {
+    color: var(--color-text-secondary);
+  }
+
+  .cost-item .amount {
+    font-family: "Monaco", "Menlo", monospace;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .note {
+    padding: 16px;
+    border-left: 4px solid var(--color-accent);
+    background: var(--color-accent-light);
+    border-radius: 4px;
+    margin-bottom: 24px;
+  }
+
+  .note p {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 14px;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 28px;
+    }
+
+    .models-table {
+      font-size: 13px;
+    }
+
+    .models-table th,
+    .models-table td {
+      padding: 12px 8px;
+    }
+
+    .stat-card .value {
+      font-size: 24px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .container {
+      padding: 24px 16px;
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    h2 {
+      font-size: 18px;
+    }
+
+    .models-table {
+      display: block;
+      overflow-x: auto;
+    }
+
+    .cost-example {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="container">
+  <div class="hero">
+    <h1>💳 Video Model Pricing</h1>
+    <p>Complete pricing breakdown for all 11 video generation models with cost examples and commission structure.</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">Total Models</div>
+      <div class="value">11</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Commission Rate</div>
+      <div class="value">20%</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Most Affordable</div>
+      <div class="value">$0.05/s</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Premium Tier</div>
+      <div class="value">6 Models</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <p><strong>💡 All costs include 20% commission</strong> on top of API pricing. Examples show 10-second generation at 1080p.</p>
+  </div>
+
+  <h2>📊 Pricing by Model</h2>
+  <table class="models-table">
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Company</th>
+        <th>Tier</th>
+        <th>Pricing</th>
+        <th>Duration</th>
+        <th>Features</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="model-name">🎬 Kling 3.0</div></td>
+        <td>Kuaishou</td>
+        <td><span class="badge premium">Premium</span></td>
+        <td><div class="pricing">$0.10/sec</div></td>
+        <td><div class="duration">5, 10, 15s</div></td>
+        <td><div class="features">Multi-shot, T2V + I2V</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎬 Veo 3 Fast</div></td>
+        <td>Google</td>
+        <td><span class="badge premium">Premium</span></td>
+        <td><div class="pricing">$0.15/sec</div></td>
+        <td><div class="duration">4, 6, 8s</div></td>
+        <td><div class="features">Fast, T2V + I2V</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎬 Runway Gen-4 Turbo</div></td>
+        <td>Runway</td>
+        <td><span class="badge premium">Premium</span></td>
+        <td><div class="pricing">$0.05/sec</div></td>
+        <td><div class="duration">5, 10s</div></td>
+        <td><div class="features">21:9 aspect, T2V + I2V</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎬 Luma Ray 3</div></td>
+        <td>Luma AI</td>
+        <td><span class="badge premium">Premium</span></td>
+        <td><div class="pricing">$0.35/video</div></td>
+        <td><div class="duration">5, 10s</div></td>
+        <td><div class="features">HDR, keyframes, loop</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎬 Seedance 2.0</div></td>
+        <td>ByteDance</td>
+        <td><span class="badge premium">Premium</span></td>
+        <td><div class="pricing">$0.056/sec</div></td>
+        <td><div class="duration">5, 10, 15s</div></td>
+        <td><div class="features">2K, audio, multi-shot</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎭 Jogg AI</div></td>
+        <td>Jogg</td>
+        <td><span class="badge premium">Premium</span></td>
+        <td><div class="pricing">$0.15/sec</div></td>
+        <td><div class="duration">5, 10, 15s</div></td>
+        <td><div class="features">Avatar generation</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎬 Hailuo 2.3</div></td>
+        <td>MiniMax</td>
+        <td><span class="badge standard">Standard</span></td>
+        <td><div class="pricing">$0.08/sec</div></td>
+        <td><div class="duration">6, 10s</div></td>
+        <td><div class="features">I2V only, res-dependent</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎬 Wan 2.7</div></td>
+        <td>Alibaba</td>
+        <td><span class="badge standard">Standard</span></td>
+        <td><div class="pricing">$0.10/sec</div></td>
+        <td><div class="duration">5, 10s (mode-based)</div></td>
+        <td><div class="features">Cost-efficient, T2V + I2V</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎬 Pika 2.2</div></td>
+        <td>Pika Labs</td>
+        <td><span class="badge standard">Standard</span></td>
+        <td><div class="pricing">$0.08/sec</div></td>
+        <td><div class="duration">3, 5, 8, 10s</div></td>
+        <td><div class="features">Keyframes, effects</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎬 Seedance 1.0</div></td>
+        <td>ByteDance</td>
+        <td><span class="badge standard">Standard</span></td>
+        <td><div class="pricing">$0.056/sec</div></td>
+        <td><div class="duration">5, 10s</div></td>
+        <td><div class="features">1080p standard</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎬 Luma Ray 2</div></td>
+        <td>Luma AI</td>
+        <td><span class="badge standard">Standard</span></td>
+        <td><div class="pricing">N/A</div></td>
+        <td><div class="duration">5, 9s</div></td>
+        <td><div class="features">Loop, keyframes</div></td>
+      </tr>
+      <tr>
+        <td><div class="model-name">🎬 SVD</div></td>
+        <td>Stability AI</td>
+        <td><span class="badge budget">Budget</span></td>
+        <td><div class="pricing">N/A</div></td>
+        <td><div class="duration">2, 4s (frames)</div></td>
+        <td><div class="features">I2V only, shortest</div></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>💰 Cost Examples (10-second generation)</h2>
+  <div class="cost-example">
+    <div class="example-card">
+      <h4>💵 Budget Option</h4>
+      <div class="cost-breakdown">
+        <div class="cost-item">
+          <span class="label">Base Cost</span>
+          <span class="amount">$0.50</span>
+        </div>
+        <div class="cost-item">
+          <span class="label">Commission (20%)</span>
+          <span class="amount">$0.10</span>
+        </div>
+        <div class="cost-item total">
+          <span class="label">Total Cost</span>
+          <span class="amount">$0.60</span>
+        </div>
+      </div>
+      <div class="features" style="margin-top: 12px; color: var(--color-text-secondary);">Runway Gen-4 Turbo</div>
+    </div>
+
+    <div class="example-card">
+      <h4>🎯 Standard Option</h4>
+      <div class="cost-breakdown">
+        <div class="cost-item">
+          <span class="label">Base Cost</span>
+          <span class="amount">$0.80</span>
+        </div>
+        <div class="cost-item">
+          <span class="label">Commission (20%)</span>
+          <span class="amount">$0.16</span>
+        </div>
+        <div class="cost-item total">
+          <span class="label">Total Cost</span>
+          <span class="amount">$0.96</span>
+        </div>
+      </div>
+      <div class="features" style="margin-top: 12px; color: var(--color-text-secondary);">Pika 2.2 / Hailuo 2.3</div>
+    </div>
+
+    <div class="example-card">
+      <h4>✨ Premium Option</h4>
+      <div class="cost-breakdown">
+        <div class="cost-item">
+          <span class="label">Base Cost</span>
+          <span class="amount">$1.00</span>
+        </div>
+        <div class="cost-item">
+          <span class="label">Commission (20%)</span>
+          <span class="amount">$0.20</span>
+        </div>
+        <div class="cost-item total">
+          <span class="label">Total Cost</span>
+          <span class="amount">$1.20</span>
+        </div>
+      </div>
+      <div class="features" style="margin-top: 12px; color: var(--color-text-secondary);">Kling 3.0 / Wan 2.7</div>
+    </div>
+  </div>
+
+  <h2>🎯 Model Selection Guide</h2>
+
+  <div style="margin-bottom: 48px;">
+    <h3 style="font-size: 16px; font-weight: 600; color: var(--color-accent); margin-bottom: 24px;">Premium Tier ($0.15-$0.35)</h3>
+    <div style="display: grid; gap: 16px;">
+      <div style="padding: 16px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface);">
+        <strong>Best for Professional Production</strong>
+        <p style="color: var(--color-text-secondary); font-size: 13px; margin-top: 8px;">Kling 3.0, Veo 3 Fast, Luma Ray 3, Seedance 2.0 — highest quality, special features like HDR, multi-shot support, native audio.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 48px;">
+    <h3 style="font-size: 16px; font-weight: 600; color: var(--color-success); margin-bottom: 24px;">Standard Tier ($0.05-$0.10)</h3>
+    <div style="display: grid; gap: 16px;">
+      <div style="padding: 16px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface);">
+        <strong>Best Value Option</strong>
+        <p style="color: var(--color-text-secondary); font-size: 13px; margin-top: 8px;">Runway Gen-4 Turbo ($0.05), Wan 2.7 ($0.10) — excellent quality-to-price ratio, flexible options for different workflows.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 48px;">
+    <h3 style="font-size: 16px; font-weight: 600; color: var(--color-warning); margin-bottom: 24px;">Budget Tier</h3>
+    <div style="display: grid; gap: 16px;">
+      <div style="padding: 16px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface);">
+        <strong>For Quick Tests & Prototypes</strong>
+        <p style="color: var(--color-text-secondary); font-size: 13px; margin-top: 8px;">SVD, Luma Ray 2 — self-hostable options, great for experimentation and learning, lowest cost.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 24px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); text-align: center;">
+    <p style="color: var(--color-text-secondary); margin: 0; font-size: 13px;">All costs calculated with 20% platform commission | Prices effective 2026-09-17</p>
+  </div>
+</div>
