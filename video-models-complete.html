@@ -1,0 +1,805 @@
+<title>Video Models - Complete Specifications</title>
+<style>
+  :root {
+    --color-bg: #0A0A0B;
+    --color-surface: #111114;
+    --color-border: rgba(255, 255, 255, 0.06);
+    --color-text: #FFFFFF;
+    --color-text-secondary: rgba(255, 255, 255, 0.6);
+    --color-text-tertiary: rgba(255, 255, 255, 0.4);
+    --color-accent: #FBBF24;
+    --color-accent-light: rgba(251, 191, 36, 0.1);
+    --color-success: #10B981;
+    --color-success-light: rgba(16, 185, 129, 0.1);
+    --color-warning: #F59E0B;
+    --color-warning-light: rgba(245, 158, 11, 0.1);
+    --color-error: #EF4444;
+    --color-error-light: rgba(239, 68, 68, 0.1);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --color-bg: #FFFFFF;
+      --color-surface: #F9FAFB;
+      --color-border: rgba(0, 0, 0, 0.06);
+      --color-text: #000000;
+      --color-text-secondary: rgba(0, 0, 0, 0.6);
+      --color-text-tertiary: rgba(0, 0, 0, 0.4);
+      --color-accent: #F59E0B;
+      --color-accent-light: rgba(245, 158, 11, 0.1);
+    }
+  }
+
+  :root[data-theme="light"] {
+    --color-bg: #FFFFFF;
+    --color-surface: #F9FAFB;
+    --color-border: rgba(0, 0, 0, 0.06);
+    --color-text: #000000;
+    --color-text-secondary: rgba(0, 0, 0, 0.6);
+    --color-text-tertiary: rgba(0, 0, 0, 0.4);
+    --color-accent: #F59E0B;
+    --color-accent-light: rgba(245, 158, 11, 0.1);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    font-size: 14px;
+    padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 48px;
+    margin-bottom: 20px;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 12px;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  p {
+    margin-bottom: 16px;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+  }
+
+  ul, ol {
+    margin-left: 20px;
+    margin-bottom: 16px;
+  }
+
+  li {
+    margin-bottom: 8px;
+    color: var(--color-text-secondary);
+  }
+
+  code {
+    background: var(--color-surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 13px;
+    color: var(--color-accent);
+  }
+
+  .hero {
+    margin-bottom: 48px;
+    padding: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+  }
+
+  .hero h1 {
+    margin-bottom: 16px;
+    margin-top: 0;
+  }
+
+  .model-card {
+    padding: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    margin-bottom: 24px;
+  }
+
+  .model-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .model-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .model-company {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-premium {
+    background: rgba(251, 191, 36, 0.1);
+    color: var(--color-accent);
+  }
+
+  .badge-standard {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+  }
+
+  .badge-budget {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+  }
+
+  .badge-special {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+  }
+
+  .model-specs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 16px 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .spec {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .spec-label {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .spec-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .features-list {
+    margin-top: 16px;
+  }
+
+  .features-list li {
+    margin-bottom: 6px;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+  }
+
+  .warning-box {
+    padding: 12px;
+    border-left: 4px solid var(--color-warning);
+    background: var(--color-warning-light);
+    border-radius: 4px;
+    margin-top: 12px;
+  }
+
+  .warning-box p {
+    margin: 0;
+    color: var(--color-warning);
+    font-size: 13px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+  }
+
+  .stat-card h4 {
+    font-size: 12px;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .stat-card p {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .footer {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+    color: var(--color-text-tertiary);
+    font-size: 12px;
+  }
+
+  @media (max-width: 640px) {
+    h1 {
+      font-size: 28px;
+    }
+
+    h2 {
+      font-size: 18px;
+    }
+
+    .container {
+      padding: 24px 16px;
+    }
+
+    .model-specs {
+      grid-template-columns: 1fr;
+    }
+
+    .model-header {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<div class="container">
+  <div class="hero">
+    <h1>🎬 Video Models - Complete Specifications</h1>
+    <p>All 11 video generation models with complete duration, resolution, and aspect ratio specifications. Updated: 2026-09-17</p>
+  </div>
+
+  <div class="grid">
+    <div class="stat-card">
+      <h4>Total Models</h4>
+      <p>11</p>
+    </div>
+    <div class="stat-card">
+      <h4>T2V Support</h4>
+      <p>10</p>
+    </div>
+    <div class="stat-card">
+      <h4>I2V Support</h4>
+      <p>10</p>
+    </div>
+    <div class="stat-card">
+      <h4>Avatar</h4>
+      <p>1</p>
+    </div>
+  </div>
+
+  <h2>Premium Models</h2>
+
+  <!-- KLING 3.0 -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Kling 3.0</div>
+        <div class="model-company">Kuaishou</div>
+      </div>
+      <span class="badge badge-premium">Premium</span>
+      <span class="badge badge-special">Latest</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">5, 10, 15 seconds</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolutions</div>
+        <div class="spec-value">720p, 1080p, 4K</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratios</div>
+        <div class="spec-value">16:9, 9:16, 1:1</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">✅ Yes</div>
+      </div>
+    </div>
+    <p>Advanced motion and realistic physics with multi-shot support.</p>
+    <ul class="features-list">
+      <li>✅ Text-to-video</li>
+      <li>✅ Image-to-video</li>
+      <li>🎬 Multi-shot (up to 6 shots)</li>
+      <li>📱 Native audio (lipsync + SFX)</li>
+      <li>🔄 Extendable</li>
+      <li>⚠️ Total duration across all shots must not exceed 15s</li>
+    </ul>
+  </div>
+
+  <!-- VEO 3 FAST -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Veo 3 Fast</div>
+        <div class="model-company">Google</div>
+      </div>
+      <span class="badge badge-premium">Premium</span>
+      <span class="badge badge-special">Fast</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">4, 6, 8 seconds ONLY</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolutions</div>
+        <div class="spec-value">720p, 1080p</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratios</div>
+        <div class="spec-value">16:9, 9:16</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">✅ Yes</div>
+      </div>
+    </div>
+    <p>Fast cinematic video generation by Google.</p>
+    <ul class="features-list">
+      <li>✅ Text-to-video</li>
+      <li>✅ Image-to-video</li>
+      <li>📱 Native audio (dialogue, ambient, SFX)</li>
+      <li>🔄 Extendable via Veo 3.1 (up to 148s)</li>
+    </ul>
+    <div class="warning-box">
+      <p>⚠️ Duration MUST be dropdown (4, 6, 8 only) - no other values accepted by API. Remove 1:1 aspect ratio - API will error.</p>
+    </div>
+  </div>
+
+  <!-- LUMA RAY 3 -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Luma Ray 3</div>
+        <div class="model-company">Luma AI</div>
+      </div>
+      <span class="badge badge-premium">Premium</span>
+      <span class="badge badge-special">Pro (3.2)</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">5, 10 seconds</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolutions</div>
+        <div class="spec-value">360p, 540p, 720p, 1080p</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratios</div>
+        <div class="spec-value">16:9, 9:16, 1:1, 4:3, 3:4, 21:9</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">❌ No</div>
+      </div>
+    </div>
+    <p>Latest Luma model (Ray 3.2) designed for professional production workflows.</p>
+    <ul class="features-list">
+      <li>✅ Text-to-video</li>
+      <li>✅ Image-to-video</li>
+      <li>🎬 Loop mode</li>
+      <li>🎯 HDR output support</li>
+      <li>🔑 Up to 16 keyframes per clip</li>
+      <li>🔄 Extendable</li>
+    </ul>
+  </div>
+
+  <!-- RUNWAY GEN-4 TURBO -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Runway Gen-4 Turbo</div>
+        <div class="model-company">Runway</div>
+      </div>
+      <span class="badge badge-premium">Premium</span>
+      <span class="badge badge-special">Turbo</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">5, 10 seconds (min: 2s)</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolution</div>
+        <div class="spec-value">720p only</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratios</div>
+        <div class="spec-value">16:9, 9:16, 1:1, 4:3, 3:4, 21:9</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">❌ No</div>
+      </div>
+    </div>
+    <p>Turbo mode for faster generation. Only model with 21:9 aspect ratio support.</p>
+    <ul class="features-list">
+      <li>✅ Text-to-video</li>
+      <li>✅ Image-to-video</li>
+      <li>🎬 Start & end frame control</li>
+      <li>🔄 Extendable</li>
+      <li>⭐ Unique 21:9 aspect ratio</li>
+    </ul>
+  </div>
+
+  <!-- SEEDANCE 2.0 -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Seedance 2.0</div>
+        <div class="model-company">ByteDance</div>
+      </div>
+      <span class="badge badge-premium">Premium</span>
+      <span class="badge badge-special">Pro</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">5, 10, 15 seconds (default: 10s)</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolution</div>
+        <div class="spec-value">2K</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratios</div>
+        <div class="spec-value">16:9, 9:16, 1:1</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">✅ Yes</div>
+      </div>
+    </div>
+    <p>Pro version with 2K output and native audio. Multi-shot support.</p>
+    <ul class="features-list">
+      <li>✅ Text-to-video</li>
+      <li>✅ Image-to-video</li>
+      <li>📺 2K resolution</li>
+      <li>📱 Native audio</li>
+      <li>🎬 Multi-shot support</li>
+      <li>🔄 Extendable</li>
+    </ul>
+  </div>
+
+  <h2>Standard Models</h2>
+
+  <!-- HAILUO 2.3 -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Hailuo 2.3</div>
+        <div class="model-company">MiniMax</div>
+      </div>
+      <span class="badge badge-standard">Standard</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">Depends on resolution</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolutions</div>
+        <div class="spec-value">768p, 1080p</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratios</div>
+        <div class="spec-value">16:9, 9:16</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">❌ No</div>
+      </div>
+    </div>
+    <p>Image-to-video only. Duration options change based on resolution.</p>
+    <ul class="features-list">
+      <li>❌ NO Text-to-video (image required)</li>
+      <li>✅ Image-to-video</li>
+      <li>🎬 768p: 6s only</li>
+      <li>🎬 1080p: 6s or 10s</li>
+      <li>🎥 Camera commands (Pan, Push, Static shot, etc.)</li>
+    </ul>
+    <div class="warning-box">
+      <p>⚠️ Hide/disable T2V option. Duration options must update when resolution changes.</p>
+    </div>
+  </div>
+
+  <!-- WAN 2.7 -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Wan 2.7</div>
+        <div class="model-company">Alibaba</div>
+      </div>
+      <span class="badge badge-standard">Standard</span>
+      <span class="badge badge-special">Cost Efficient</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">T2V: 5s | I2V: 5-10s</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolution</div>
+        <div class="spec-value">720p</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratios</div>
+        <div class="spec-value">16:9, 9:16, 1:1</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">❌ No</div>
+      </div>
+    </div>
+    <p>Most cost-efficient model. Max duration depends on T2V vs I2V mode.</p>
+    <ul class="features-list">
+      <li>✅ Text-to-video (max: 5s only)</li>
+      <li>✅ Image-to-video (max: 10s)</li>
+      <li>🔄 Infinite chaining (no hard cap)</li>
+      <li>🎭 Also supports R2V (reference-to-video)</li>
+      <li>💰 Most cost-efficient</li>
+    </ul>
+    <div class="warning-box">
+      <p>⚠️ Max duration must update automatically when switching between T2V and I2V mode. T2V cap is 5s, I2V cap is 10s.</p>
+    </div>
+  </div>
+
+  <!-- PIKA 2.2 -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Pika 2.2</div>
+        <div class="model-company">Pika Labs</div>
+      </div>
+      <span class="badge badge-standard">Standard</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">3, 5, 8, 10 seconds</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolutions</div>
+        <div class="spec-value">720p, 1080p</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratios</div>
+        <div class="spec-value">16:9, 9:16, 1:1</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">❌ No</div>
+      </div>
+    </div>
+    <p>Flexible with keyframes and creative effects (Pikaffects, Pikadditions, Pikaswaps).</p>
+    <ul class="features-list">
+      <li>✅ Text-to-video</li>
+      <li>✅ Image-to-video</li>
+      <li>🔑 Keyframe mode (up to 5 keyframes)</li>
+      <li>✨ Pikaffects (melt, inflate, explode, deflate, crush, etc.)</li>
+      <li>➕ Pikadditions (add elements)</li>
+      <li>🔄 Pikaswaps (swap elements)</li>
+      <li>🔄 Extendable (max 15s total via extend)</li>
+    </ul>
+  </div>
+
+  <!-- SEEDANCE 1.0 -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Seedance 1.0</div>
+        <div class="model-company">ByteDance</div>
+      </div>
+      <span class="badge badge-standard">Standard</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">5, 10 seconds</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolution</div>
+        <div class="spec-value">1080p</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratios</div>
+        <div class="spec-value">16:9, 9:16, 1:1</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">❌ No</div>
+      </div>
+    </div>
+    <p>Standard Seedance model with 1080p output.</p>
+    <ul class="features-list">
+      <li>✅ Text-to-video</li>
+      <li>✅ Image-to-video</li>
+      <li>🔄 Extendable</li>
+    </ul>
+  </div>
+
+  <!-- LUMA RAY 2 -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Luma Ray 2</div>
+        <div class="model-company">Luma AI</div>
+      </div>
+      <span class="badge badge-standard">Standard</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">5, 9 seconds</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolutions</div>
+        <div class="spec-value">540p, 720p, 1080p, 4K</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratios</div>
+        <div class="spec-value">16:9, 9:16, 1:1, 4:3, 3:4, 21:9, 9:21</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">❌ No</div>
+      </div>
+    </div>
+    <p>High-quality video with loop and keyframe support.</p>
+    <ul class="features-list">
+      <li>✅ Text-to-video</li>
+      <li>✅ Image-to-video</li>
+      <li>🎬 Loop mode</li>
+      <li>🔑 Keyframe control (start & end frame)</li>
+      <li>🔄 Extendable (up to 30s)</li>
+    </ul>
+  </div>
+
+  <h2>Budget Models</h2>
+
+  <!-- SVD -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Stable Diffusion Video</div>
+        <div class="model-company">Stability AI</div>
+      </div>
+      <span class="badge badge-budget">Budget</span>
+      <span class="badge badge-special">Shortest</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">2-4 seconds (FRAME-BASED)</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolution</div>
+        <div class="spec-value">1024×576 (fixed)</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratio</div>
+        <div class="spec-value">16:9 (fixed)</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">❌ No</div>
+      </div>
+    </div>
+    <p>Shortest duration model. Frame-based, not second-based. Image-to-video only. Open source & self-hostable.</p>
+    <ul class="features-list">
+      <li>❌ NO Text-to-video (image required)</li>
+      <li>✅ Image-to-video</li>
+      <li>🎬 SVD: 14 frames</li>
+      <li>🎬 SVD-XT: 25 frames</li>
+      <li>💻 Open source & self-hostable</li>
+    </ul>
+    <div class="warning-box">
+      <p>⚠️ Duration is frame-based, not seconds. If UI shows duration slider, lock it at 2-4 seconds with a note explaining frame-based limitation.</p>
+    </div>
+  </div>
+
+  <h2>Avatar</h2>
+
+  <!-- JOGG AI -->
+  <div class="model-card">
+    <div class="model-header">
+      <div>
+        <div class="model-title">Jogg AI</div>
+        <div class="model-company">Jogg</div>
+      </div>
+      <span class="badge badge-premium">Premium</span>
+      <span class="badge badge-special">Avatar</span>
+    </div>
+    <div class="model-specs">
+      <div class="spec">
+        <div class="spec-label">Duration</div>
+        <div class="spec-value">5, 10, 15 seconds</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Resolution</div>
+        <div class="spec-value">1080p</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Aspect Ratio</div>
+        <div class="spec-value">16:9</div>
+      </div>
+      <div class="spec">
+        <div class="spec-label">Native Audio</div>
+        <div class="spec-value">✅ Yes</div>
+      </div>
+    </div>
+    <p>Professional avatar video generation. Requires avatar selection.</p>
+    <ul class="features-list">
+      <li>👤 Avatar selection required</li>
+      <li>📱 Native audio support</li>
+      <li>🎙️ Script input (not prompt)</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <p>Video Models Documentation — Complete Specifications</p>
+    <p>Generated: 2026-09-17 | Source: src/lib/video/models-complete.ts</p>
+  </div>
+</div>
