@@ -127,29 +127,6 @@ export const VIDEO_MODELS: VideoModel[] = [
     badge: 'Turbo',
   },
 
-  // ─── LUMA RAY 2 ───
-  {
-    id: 'luma-ray-2',
-    name: 'Luma Ray 2',
-    company: 'Luma AI',
-    provider: 'luma',
-    providerModelId: 'luma-ray-2',
-    tier: 'standard',
-    types: ['text_to_video', 'image_to_video'],
-    supportsT2V: true,
-    supportsI2V: true,
-    defaultDuration: 5,
-    durationOptions: [5, 9],
-    maxDuration: 9,
-    resolutions: ['540p', '720p', '1080p', '4K'],
-    defaultResolution: '1080p',
-    aspectRatios: ['16:9', '9:16', '1:1', '4:3', '3:4', '21:9', '9:21'],
-    nativeAudio: false,
-    extendable: true,
-    specialFeatures: ['loop mode', 'keyframe control (start & end frame)', 'extendable up to 30s'],
-    description: 'High-quality video with loop and keyframe support',
-  },
-
   // ─── LUMA RAY 3 (Ray 3.2) ───
   {
     id: 'luma-ray-3',
@@ -206,28 +183,6 @@ export const VIDEO_MODELS: VideoModel[] = [
       'camera commands: Pan left, Push in, Static shot, etc.',
     ],
     description: 'Image-to-video only. Duration options depend on resolution.',
-  },
-
-  // ─── SEEDANCE 1.0 ───
-  {
-    id: 'seedance-1.0',
-    name: 'Seedance 1.0',
-    company: 'ByteDance',
-    provider: 'bytedance',
-    providerModelId: 'fal-ai/bytedance/seedance-v1',
-    tier: 'standard',
-    types: ['text_to_video', 'image_to_video'],
-    supportsT2V: true,
-    supportsI2V: true,
-    defaultDuration: 5,
-    durationOptions: [5, 10],
-    maxDuration: 10,
-    resolutions: ['1080p'],
-    defaultResolution: '1080p',
-    aspectRatios: ['16:9', '9:16', '1:1'],
-    nativeAudio: false,
-    extendable: true,
-    description: 'Standard Seedance model with 1080p output',
   },
 
   // ─── SEEDANCE 2.0 ───
