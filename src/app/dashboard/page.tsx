@@ -1453,11 +1453,13 @@ function AdvancedVideoGeneratorView({
         .then(res => res.json())
         .then(data => {
           console.log('Avatar response:', data)
-          if (data.data && Array.isArray(data.data)) {
-            setAvatars(data.data)
+          // Avatar API returns { data: { avatars: [...] } }
+          const avatarList = data.data?.avatars || data.data
+          if (avatarList && Array.isArray(avatarList)) {
+            setAvatars(avatarList)
             // Set default avatar if available
-            if (data.data.length > 0 && !selectedAvatarId) {
-              setSelectedAvatarId(data.data[0].avatar_id)
+            if (avatarList.length > 0 && !selectedAvatarId) {
+              setSelectedAvatarId(avatarList[0].avatar_id)
             }
           } else if (data.error) {
             console.error('Avatar fetch error:', data.error)
