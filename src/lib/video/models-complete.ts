@@ -185,6 +185,31 @@ export const VIDEO_MODELS: VideoModel[] = [
     description: 'Image-to-video only. Duration options depend on resolution.',
   },
 
+  // ─── HAILUO 3 ───
+  {
+    id: 'hailuo-3',
+    name: 'Hailuo 3',
+    company: 'MiniMax',
+    provider: 'fal',
+    providerModelId: 'fal-ai/minimax/video-02',
+    tier: 'premium',
+    types: ['text_to_video', 'image_to_video'],
+    supportsT2V: true,
+    supportsI2V: true,
+    pricePerSecond: 0.13,
+    defaultDuration: 6,
+    durationOptions: [6, 10],
+    maxDuration: 10,
+    resolutions: ['1080p', '4K'],
+    defaultResolution: '1080p',
+    aspectRatios: ['16:9', '9:16', '1:1'],
+    nativeAudio: true,
+    extendable: true,
+    specialFeatures: ['T2V + I2V support', 'native audio', '4K support', 'advanced motion control'],
+    description: 'Next-generation Hailuo with T2V support and native audio',
+    badge: 'Latest',
+  },
+
   // ─── SEEDANCE 2.0 ───
   {
     id: 'seedance-2.0',
