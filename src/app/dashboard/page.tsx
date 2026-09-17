@@ -1762,9 +1762,14 @@ function AdvancedVideoGeneratorView({
                       <input
                         type="number"
                         value={duration}
-                        onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 1
+                          // Enforce max duration limit
+                          const capped = Math.min(val, selectedModel.maxDuration)
+                          setDuration(Math.max(1, capped))
+                        }}
                         min="1"
-                        max={selectedModel.maxDuration * 2}
+                        max={selectedModel.maxDuration}
                         className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30"
                       />
                       <span className="text-xs text-white/40 px-2 py-2">Max: {selectedModel.maxDuration}s</span>
