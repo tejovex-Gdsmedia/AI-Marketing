@@ -17,6 +17,10 @@ export interface VideoModel {
   supportsT2V: boolean
   supportsI2V: boolean
 
+  // Pricing
+  pricePerSecond?: number
+  pricePerVideo?: number
+
   // Duration
   minDuration?: number
   defaultDuration: number
@@ -56,6 +60,7 @@ export const VIDEO_MODELS: VideoModel[] = [
     types: ['text_to_video', 'image_to_video'],
     supportsT2V: true,
     supportsI2V: true,
+    pricePerSecond: 0.10,
     minDuration: 5,
     defaultDuration: 5,
     durationOptions: [5, 10, 15],
@@ -81,6 +86,7 @@ export const VIDEO_MODELS: VideoModel[] = [
     types: ['text_to_video', 'image_to_video'],
     supportsT2V: true,
     supportsI2V: true,
+    pricePerSecond: 0.15,
     defaultDuration: 8,
     durationOptions: [4, 6, 8],
     maxDuration: 8,
@@ -106,6 +112,7 @@ export const VIDEO_MODELS: VideoModel[] = [
     types: ['text_to_video', 'image_to_video'],
     supportsT2V: true,
     supportsI2V: true,
+    pricePerSecond: 0.05,
     minDuration: 2,
     defaultDuration: 5,
     durationOptions: [5, 10],
@@ -154,6 +161,7 @@ export const VIDEO_MODELS: VideoModel[] = [
     types: ['text_to_video', 'image_to_video'],
     supportsT2V: true,
     supportsI2V: true,
+    pricePerVideo: 0.35,
     defaultDuration: 5,
     durationOptions: [5, 10],
     maxDuration: 10,
@@ -179,6 +187,7 @@ export const VIDEO_MODELS: VideoModel[] = [
     supportsT2V: false,
     supportsI2V: true,
     requiresImage: true,
+    pricePerSecond: 0.08,
     defaultDuration: 6,
     durationOptions: [6],
     maxDuration: 10,
@@ -232,6 +241,7 @@ export const VIDEO_MODELS: VideoModel[] = [
     types: ['text_to_video', 'image_to_video'],
     supportsT2V: true,
     supportsI2V: true,
+    pricePerSecond: 0.056,
     defaultDuration: 10,
     durationOptions: [5, 10, 15],
     maxDuration: 15,
@@ -256,6 +266,7 @@ export const VIDEO_MODELS: VideoModel[] = [
     types: ['text_to_video', 'image_to_video'],
     supportsT2V: true,
     supportsI2V: true,
+    pricePerSecond: 0.10,
     defaultDuration: 5,
     durationOptions: [5, 10],
     durationByMode: {
@@ -289,6 +300,7 @@ export const VIDEO_MODELS: VideoModel[] = [
     types: ['text_to_video', 'image_to_video'],
     supportsT2V: true,
     supportsI2V: true,
+    pricePerSecond: 0.08,
     defaultDuration: 5,
     durationOptions: [3, 5, 8, 10],
     maxDuration: 10,
@@ -352,6 +364,7 @@ export const VIDEO_MODELS: VideoModel[] = [
     types: ['avatar'],
     supportsT2V: false,
     supportsI2V: false,
+    pricePerSecond: 0.15,
     defaultDuration: 5,
     durationOptions: [5, 10, 15],
     maxDuration: 10,

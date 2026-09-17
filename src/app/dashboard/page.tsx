@@ -1339,7 +1339,7 @@ type VideoModel = {
 // Import complete models from models-complete.ts
 import { VIDEO_MODELS as COMPLETE_MODELS } from '@/lib/video/models-complete'
 
-// Convert to dashboard VideoModel type
+// Convert to dashboard VideoModel type - USE ACTUAL PRICING FROM COMPLETE MODELS
 const VIDEO_MODELS: VideoModel[] = COMPLETE_MODELS.map((m: any) => ({
   id: m.id,
   providerModelId: m.providerModelId,
@@ -1349,8 +1349,8 @@ const VIDEO_MODELS: VideoModel[] = COMPLETE_MODELS.map((m: any) => ({
   types: m.types,
   tier: m.tier,
   badge: m.badge,
-  pricePerSecond: 0.10, // Default pricing - update with actual costs
-  pricePerVideo: 0.35,
+  pricePerSecond: m.pricePerSecond, // Use actual pricing from complete models!
+  pricePerVideo: m.pricePerVideo,   // Use actual pricing from complete models!
   resolution: m.defaultResolution || m.resolutions?.[0] || '1080p',
   maxDuration: m.maxDuration,
 }))
