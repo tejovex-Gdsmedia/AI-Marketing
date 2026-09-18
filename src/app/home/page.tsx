@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { Plus, ArrowUpRight, LogOut } from 'lucide-react'
 
 interface Company {
   id: string
@@ -24,20 +25,12 @@ export default function HomePage() {
   useEffect(() => {
     const init = async () => {
       const supabase = createClient()
-
-      // Check if user is logged in
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         router.push('/login')
         return
       }
-
-      setUser({
-        email: user.email || '',
-        name: user.user_metadata?.full_name || user.email || ''
-      })
-
-      // Fetch their companies from FastAPI
+      setUser({ email: user.email || '', name: user.user_metadata?.full_name || user.email || '' })
       try {
         const res = await fetch(`http://127.0.0.1:8000/companies?user_id=${user.id}`)
         const data = await res.json()
@@ -45,12 +38,10 @@ export default function HomePage() {
       } catch (err) {
         console.error('Failed to fetch companies:', err)
       }
-
       setLoading(false)
     }
-
     init()
-  }, [])
+  }, [router])
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -73,137 +64,94 @@ export default function HomePage() {
   }
 
   const statusColors: Record<string, string> = {
-    done: 'bg-green-400/10 text-green-400',
-    running: 'bg-amber-400/10 text-amber-400',
-    pending: 'bg-white/5 text-white/40',
+    done: 'bg-emerald-400/10 text-emerald-400',
+    running: 'bg-neutral-400/10 text-neutral-300',
+    pending: 'bg-neutral-800/40 text-neutral-500',
     failed: 'bg-red-400/10 text-red-400',
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0B] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-neutral-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-white">
-
-      {/* Header */}
-      <header className="border-b border-white/[0.06] px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-[#0a0a0c] text-[#e8e6e3]">
+      <header className="border-b border-white/[0.04] px-6 md:px-10 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black font-bold text-sm">
-            L
-          </div>
-          <span className="text-sm font-semibold text-white">Launchpad</span>
+          <div className="w-8 h-8 rounded-lg bg-neutral-800 border border-white/[0.08] flex items-center justify-center text-xs font-bold text-neutral-300">L</div>
+          <span className="text-sm font-semibold text-white tracking-tight">Launchpad</span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-white/40">{user?.email}</span>
-          <button
-            onClick={handleLogout}
-            className="text-xs px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-white/60"
-          >
-            Sign Out
+          <span className="text-xs text-neutral-500 hidden md:inline">{user?.email}</span>
+          <button onClick={handleLogout} className="text-xs px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:text-white transition-colors text-neutral-500 flex items-center gap-1.5">
+            <LogOut className="w-3.5 h-3.5" /> Sign Out
           </button>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
-
-        {/* Welcome */}
+      <main className="max-w-5xl mx-auto px-6 md:px-10 py-12 md:py-16">
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-2xl font-bold text-white">
-              Welcome back, {user?.name?.split(' ')[0]} 👋
-            </h1>
-            <p className="text-white/40 text-sm mt-1">
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-neutral-100">Welcome back, {user?.name?.split(' ')[0]}</h1>
+            <p className="text-neutral-500 text-sm mt-1.5">
               {companies.length > 0
                 ? `You have ${companies.length} company${companies.length > 1 ? 'ies' : ''} analysed`
                 : 'Start by analysing your first company'}
             </p>
           </div>
-          <Link
-            href="/onboarding"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-black font-semibold text-sm hover:opacity-90 transition-opacity"
-          >
-            + New Company
+          <Link href="/onboarding" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-neutral-200 text-[#0a0a0c] font-semibold text-sm hover:bg-white transition-colors shadow-none">
+            <Plus className="w-4 h-4" /> New Company
           </Link>
         </div>
 
-        {/* Companies Grid */}
         {companies.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center mb-6 text-2xl">
-              🏢
-            </div>
-            <h3 className="text-white font-semibold mb-2">No companies yet</h3>
-            <p className="text-white/40 text-sm mb-8">
-              Analyse your first company to get started
-            </p>
-            <Link
-              href="/onboarding"
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-black font-semibold text-sm hover:opacity-90 transition-opacity"
-            >
+          <div className="flex flex-col items-center justify-center py-24 text-center rounded-2xl border border-dashed border-white/[0.06] bg-[#0f0f12]">
+            <div className="w-14 h-14 rounded-2xl bg-neutral-800 border border-white/[0.06] flex items-center justify-center mb-6 text-xl text-neutral-400">🏢</div>
+            <h3 className="text-white font-medium mb-2">No companies yet</h3>
+            <p className="text-neutral-500 text-sm mb-8">Analyse your first company to get started</p>
+            <Link href="/onboarding" className="px-6 py-3 rounded-xl bg-neutral-200 text-[#0a0a0c] font-semibold text-sm hover:bg-white transition-colors">
               Analyse a Company
             </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-{companies.map((company) => (
-  <button
-    key={company.id}
-    onClick={() => handleCompanyClick(company)}
-    className="text-left p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-amber-400/30 hover:bg-white/[0.05] transition-all duration-200 group"
-  >
-    {/* Top row */}
-    <div className="flex items-start justify-between mb-4">
-      <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400 font-bold text-lg group-hover:bg-amber-400/20 transition-colors shrink-0">
-        {company.company_name.charAt(0).toUpperCase()}
-      </div>
-      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[company.scrape_status] || statusColors.pending}`}>
-        {company.scrape_status === 'done' ? '✓ Ready' : company.scrape_status}
-      </span>
-    </div>
-
-    {/* Company name and details */}
-    <h3 className="text-sm font-semibold text-white mb-0.5 truncate">
-      {company.company_name}
-    </h3>
-    <p className="text-xs text-white/40 mb-1 truncate">{company.website_url}</p>
-    <p className="text-xs text-white/30 mb-4">{company.industry}</p>
-
-    {/* Divider */}
-    <div className="h-px bg-white/[0.04] mb-3" />
-
-    {/* Modules row */}
-    <div className="flex flex-wrap gap-1 mb-3">
-      {(company.active_modules || []).map((mod) => (
-        <span key={mod} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/50 border border-white/[0.06]">
-          {moduleLabels[mod] || mod}
-        </span>
-      ))}
-    </div>
-
-    {/* Date and arrow */}
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-white/30">
-        {new Date(company.created_at).toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        })}
-      </span>
-      <svg
-        width="14" height="14" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" strokeWidth="2"
-        className="text-white/20 group-hover:text-amber-400 transition-colors"
-      >
-        <path d="M5 12h14M12 5l7 7-7 7" />
-      </svg>
-    </div>
-  </button>
-))}
+            {companies.map((company) => (
+              <button
+                key={company.id}
+                onClick={() => handleCompanyClick(company)}
+                className="text-left p-5 rounded-2xl bg-[#0f0f12] border border-white/[0.06] hover:border-neutral-600 hover:bg-[#121216] transition-all duration-200 group"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-neutral-800 border border-white/[0.08] flex items-center justify-center text-neutral-300 font-semibold text-sm shrink-0">
+                    {company.company_name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${statusColors[company.scrape_status] || statusColors.pending}`}>
+                    {company.scrape_status === 'done' ? 'Ready' : company.scrape_status}
+                  </span>
+                </div>
+                <h3 className="text-sm font-medium text-white mb-0.5 truncate">{company.company_name}</h3>
+                <p className="text-xs text-neutral-500 mb-1 truncate">{company.website_url}</p>
+                <p className="text-[11px] text-neutral-600 mb-4">{company.industry}</p>
+                <div className="h-px bg-white/[0.06] mb-3" />
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {(company.active_modules || []).map((mod) => (
+                    <span key={mod} className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 border border-white/[0.06]">
+                      {moduleLabels[mod] || mod}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-neutral-600">
+                    {new Date(company.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                  <ArrowUpRight className="w-4 h-4 text-neutral-600 group-hover:text-neutral-400 transition-colors" />
+                </div>
+              </button>
+            ))}
           </div>
         )}
       </main>
