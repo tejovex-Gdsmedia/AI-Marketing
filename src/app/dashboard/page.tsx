@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview'
 import { WalletOverview } from '@/components/wallet/wallet-overview'
+import { useN8nWebhook } from '@/hooks/use-n8n-webhook'
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -1520,39 +1521,83 @@ function AdvancedVideoGeneratorView({
     setVideoUrl(null)
 
     try {
-      const payload: Record<string, unknown> = {
-        modelId: selectedModel.id,
-        prompt: prompt.trim(),
-        imageUrl: imageUrl.trim() || undefined,
-        duration,
-        aspectRatio,
-        userId: 'user_id_here',
-      }
-
-      // Add avatar_id for Jogg AI
+      // For Jogg AI, use n8n webhook
       if (selectedModel.id === 'jogg-ai') {
         if (!selectedAvatarId) {
           setError('Please select an avatar')
           setStatus('failed')
           return
         }
-        payload.avatar_id = selectedAvatarId
+
+        // Find selected avatar details
+        const selectedAvatar = avatars.find(a => a.avatar_id === selectedAvatarId)
+
+        const n8nPayload = {
+          model_id: selectedModel.id,
+          model_name: selectedModel.name,
+          prompt: prompt.trim(),
+          duration,
+          resolution: 'HD',
+          avatar_id: selectedAvatarId,
+          avatar_name: selectedAvatar?.name || 'Unknown',
+          user_id: 'user_id_here',
+          timestamp: new Date().toISOString(),
+        }
+
+        console.log('Triggering n8n webhook for Jogg AI:', n8nPayload)
+
+        const n8nRes = await fetch('https://n8n.srv972212.hstgr.cloud/webhook/generate-video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(n8nPayload),
+        })
+
+        if (!n8nRes.ok) {
+          const errText = await n8nRes.text()
+          throw new Error(`n8n webhook failed: ${n8nRes.status} - ${errText}`)
+        }
+
+        const n8nData = await n8nRes.json()
+        console.log('n8n webhook response:', n8nData)
+
+        // Handle n8n response
+        if (n8nData.video_url) {
+          setVideoUrl(n8nData.video_url)
+          setStatus('completed')
+          setJobId(n8nData.job_id || 'n8n_generated')
+        } else if (n8nData.success === false) {
+          throw new Error(n8nData.error || 'n8n generation failed')
+        } else {
+          setStatus('completed')
+          setJobId(n8nData.job_id || 'n8n_generated')
+        }
+      } else {
+        // For other models, use existing API
+        const payload: Record<string, unknown> = {
+          modelId: selectedModel.id,
+          prompt: prompt.trim(),
+          imageUrl: imageUrl.trim() || undefined,
+          duration,
+          aspectRatio,
+          userId: 'user_id_here',
+        }
+
+        const res = await fetch('/api/video-generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error)
+
+        setJobId(data.jobId)
+        setProvider(data.provider)
+        setStatus('polling')
       }
-
-      const res = await fetch('/api/video-generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-
-      setJobId(data.jobId)
-      setProvider(data.provider)
-      setStatus('polling')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Generation failed'
+      console.error('Generation error:', message)
       setError(message)
       setStatus('failed')
     }
