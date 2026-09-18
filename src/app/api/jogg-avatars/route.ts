@@ -14,7 +14,7 @@ export async function GET() {
 
     console.log('Fetching avatars from Jogg AI...');
 
-    const res = await fetch('https://api.jogg.ai/v1/avatars', {
+    const res = await fetch('https://api.jogg.ai/v2/avatar/public', {
       method: 'GET',
       headers: {
         'x-api-key': joggKey,
@@ -34,9 +34,8 @@ export async function GET() {
     }
 
     const data = await res.json();
-    console.log('Avatars fetched successfully, count:', data.data?.avatars?.length || 'unknown');
+    console.log('Avatars fetched successfully:', data.data?.avatars?.length ?? 'unknown');
 
-    // Return the full response as-is so frontend can parse it
     return NextResponse.json(data);
   } catch (error) {
     console.error('Avatar fetch error:', error);
@@ -46,4 +45,3 @@ export async function GET() {
     );
   }
 }
-

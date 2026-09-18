@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview'
 import { WalletOverview } from '@/components/wallet/wallet-overview'
-import { useN8nWebhook } from '@/hooks/use-n8n-webhook'
+import { useJoggVideoGeneration } from '@/hooks/use-jogg-video-generation'
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -1533,63 +1533,34 @@ function AdvancedVideoGeneratorView({
     }
   }
 
+  // Use Jogg video generation hook
+  const {
+    generateVideo: generateJoggVideo,
+    reset: resetJogg,
+  } = useJoggVideoGeneration()
+
   async function handleGenerate() {
     if (!selectedModel || !prompt.trim()) return
-    setStatus('generating')
     setError(null)
     setVideoUrl(null)
 
     try {
-      // For Jogg AI, use n8n webhook
+      // For Jogg AI, use n8n webhook with proper video generation flow
       if (selectedModel.id === 'jogg-ai') {
         if (!selectedAvatarId) {
           setError('Please select an avatar')
-          setStatus('failed')
           return
         }
 
         // Find selected avatar details
         const selectedAvatar = avatars.find(a => a.avatar_id === selectedAvatarId)
 
-        const n8nPayload = {
-          model_id: selectedModel.id,
-          model_name: selectedModel.name,
-          prompt: prompt.trim(),
-          duration,
-          resolution: 'HD',
-          avatar_id: selectedAvatarId,
-          avatar_name: selectedAvatar?.name || 'Unknown',
-          user_id: 'user_id_here',
-          timestamp: new Date().toISOString(),
-        }
-
-        console.log('Triggering n8n webhook for Jogg AI:', n8nPayload)
-
-        const n8nRes = await fetch('https://n8n.srv972212.hstgr.cloud/webhook/generate-video', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(n8nPayload),
+        // Step 1: Generate Video via n8n webhook
+        await generateJoggVideo({
+          avatarId: selectedAvatarId, // Must be integer
+          script: prompt.trim(),
+          voiceId: 'MFZUKuGQUsGJPQjTS4wC',
         })
-
-        if (!n8nRes.ok) {
-          const errText = await n8nRes.text()
-          throw new Error(`n8n webhook failed: ${n8nRes.status} - ${errText}`)
-        }
-
-        const n8nData = await n8nRes.json()
-        console.log('n8n webhook response:', n8nData)
-
-        // Handle n8n response
-        if (n8nData.video_url) {
-          setVideoUrl(n8nData.video_url)
-          setStatus('completed')
-          setJobId(n8nData.job_id || 'n8n_generated')
-        } else if (n8nData.success === false) {
-          throw new Error(n8nData.error || 'n8n generation failed')
-        } else {
-          setStatus('completed')
-          setJobId(n8nData.job_id || 'n8n_generated')
-        }
       } else {
         // For other models, use existing API
         const payload: Record<string, unknown> = {
@@ -1874,7 +1845,7 @@ function AdvancedVideoGeneratorView({
               </div>
 
               {/* Generate Button */}
-              {status === 'idle' || status === 'failed' ? (
+              {(status === 'idle' || status === 'failed') && (
                 <button
                   onClick={handleGenerate}
                   disabled={!prompt.trim()}
@@ -1882,14 +1853,27 @@ function AdvancedVideoGeneratorView({
                 >
                   Generate Video
                 </button>
-              ) : status === 'generating' || status === 'polling' ? (
+              )}
+              {status === 'generating' && (
                 <div className="w-full py-2.5 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center gap-2">
                   <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-xs text-white/60">
-                    {status === 'generating' ? 'Submitting...' : 'Generating...'}
-                  </span>
+                  <span className="text-xs text-white/60">Sending request...</span>
                 </div>
-              ) : null}
+              )}
+              {status === 'polling' && (
+                <div className="w-full py-2.5 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs text-white/60">Generating... ({elapsedSeconds}s)</span>
+                </div>
+              )}
+              {status === 'completed' && (
+                <button
+                  onClick={() => { handleReset(); resetJogg() }}
+                  className="w-full py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 hover:opacity-90 text-black font-semibold text-sm rounded-lg transition-opacity"
+                >
+                  Generate Another
+                </button>
+              )}
 
               {/* Error */}
               {status === 'failed' && error && (
