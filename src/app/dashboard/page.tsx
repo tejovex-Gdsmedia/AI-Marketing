@@ -181,15 +181,18 @@ export default function DashboardPage() {
         bg-[#111114] border-r border-white/[0.06]
         transition-all duration-300
         ${sidebarOpen ? 'w-64' : 'w-16'}
-        <div className="p-3 border-b border-white/[0.06]">
-        <a href="/" className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#8A94A6] hover:text-white hover:bg-white/[0.06] transition-colors">
-          <span className="text-lg">🏠</span>
-          {sidebarOpen && <span className="text-sm font-medium">Home</span>}
-        </a>
-        </div>
       `}>
 
-        
+        {/* Home Button */}
+        <div className="p-3 border-b border-white/[0.06]">
+          <a
+            href="/"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#8A94A6] hover:text-white hover:bg-white/[0.06] transition-colors"
+          >
+            <span className="text-lg">🏠</span>
+            {sidebarOpen && <span className="text-sm font-medium">Home</span>}
+          </a>
+        </div>
 
         {/* Logo + Toggle */}
         <div className="flex items-center gap-3 px-4 py-4 border-b border-white/[0.06]">
