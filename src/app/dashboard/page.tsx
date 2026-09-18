@@ -1478,7 +1478,7 @@ function AdvancedVideoGeneratorView({
           if (avatarList && avatarList.length > 0) {
             setAvatars(avatarList)
             // Set default avatar if available
-            if (!selectedAvatarId) {
+            if (!selectedAvatarId && avatarList && avatarList.length > 0) {
               setSelectedAvatarId(avatarList[0].avatar_id)
             }
           } else if (data.error) {
@@ -1535,6 +1535,12 @@ function AdvancedVideoGeneratorView({
 
   // Use Jogg video generation hook
   const {
+    videoId: joggVideoId,
+    status: joggStatus,
+    videoUrl: joggVideoUrl,
+    error: joggError,
+    progress: joggProgress,
+    elapsedSeconds: joggElapsed,
     generateVideo: generateJoggVideo,
     reset: resetJogg,
   } = useJoggVideoGeneration()
@@ -1854,19 +1860,23 @@ function AdvancedVideoGeneratorView({
                   Generate Video
                 </button>
               )}
-              {status === 'generating' && (
+              {(status === 'generating' || joggStatus === 'generating') && (
                 <div className="w-full py-2.5 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center gap-2">
                   <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
                   <span className="text-xs text-white/60">Sending request...</span>
                 </div>
               )}
-              {status === 'polling' && (
+              {(status === 'polling' || joggStatus === 'processing') && (
                 <div className="w-full py-2.5 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center gap-2">
                   <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-xs text-white/60">Generating... ({elapsedSeconds}s)</span>
+                  <span className="text-xs text-white/60">
+                    {joggStatus === 'processing'
+                      ? `Generating... (${joggElapsed}s)`
+                      : 'Generating...'}
+                  </span>
                 </div>
               )}
-              {status === 'completed' && (
+              {(status === 'completed' || joggStatus === 'completed') && (
                 <button
                   onClick={() => { handleReset(); resetJogg() }}
                   className="w-full py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 hover:opacity-90 text-black font-semibold text-sm rounded-lg transition-opacity"
@@ -1876,22 +1886,27 @@ function AdvancedVideoGeneratorView({
               )}
 
               {/* Error */}
-              {status === 'failed' && error && (
+              {(status === 'failed' && error) || (joggStatus === 'failed' && joggError) ? (
                 <div className="bg-red-900/20 border border-red-700/40 rounded-lg p-3">
-                  <p className="text-xs text-red-400">{error}</p>
-                  <button onClick={handleReset} className="text-xs text-red-300 underline mt-1">
+                  <p className="text-xs text-red-400">{joggStatus === 'failed' ? joggError : error}</p>
+                  <button onClick={() => { handleReset(); resetJogg() }} className="text-xs text-red-300 underline mt-1">
                     Try again
                   </button>
                 </div>
-              )}
+              ) : null}
 
               {/* Result */}
-              {status === 'completed' && videoUrl && (
+              {(status === 'completed' && videoUrl) || (joggStatus === 'completed' && joggVideoUrl) ? (
                 <div className="space-y-2">
-                  <video src={videoUrl} controls autoPlay className="w-full rounded-lg border border-white/10" />
+                  <video
+                    src={joggStatus === 'completed' ? joggVideoUrl : videoUrl}
+                    controls
+                    autoPlay
+                    className="w-full rounded-lg border border-white/10"
+                  />
                   <div className="flex gap-2">
                     <a
-                      href={videoUrl}
+                      href={joggStatus === 'completed' ? joggVideoUrl : videoUrl}
                       download
                       target="_blank"
                       rel="noopener noreferrer"
@@ -1900,14 +1915,14 @@ function AdvancedVideoGeneratorView({
                       Download
                     </a>
                     <button
-                      onClick={handleReset}
+                      onClick={() => { handleReset(); resetJogg() }}
                       className="flex-1 py-2 bg-white/5 border border-white/10 text-white/60 text-xs font-medium rounded-lg hover:bg-white/10 transition-colors"
                     >
                       Generate Another
                     </button>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
           )}
         </div>

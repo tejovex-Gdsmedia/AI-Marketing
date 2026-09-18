@@ -1,0 +1,161 @@
+<title>Jogg AI Diagnostics</title>
+<style>
+  :root {
+    --color-bg: #0A0A0B;
+    --color-surface: #111114;
+    --color-border: rgba(255, 255, 255, 0.06);
+    --color-text: #FFFFFF;
+    --color-text-secondary: rgba(255, 255, 255, 0.6);
+    --color-success: #10B981;
+    --color-error: #EF4444;
+    --color-warning: #F59E0B;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --color-bg: #FFFFFF;
+      --color-surface: #F9FAFB;
+      --color-border: rgba(0, 0, 0, 0.06);
+      --color-text: #000000;
+      --color-text-secondary: rgba(0, 0, 0, 0.6);
+      --color-success: #059669;
+      --color-error: #DC2626;
+      --color-warning: #D97706;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--color-bg); color: var(--color-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  .container { max-width: 800px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font-size: 28px; margin-bottom: 24px; }
+  .test-section { margin-bottom: 32px; padding: 20px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); }
+  .test-section h2 { font-size: 16px; margin-bottom: 16px; font-weight: 600; }
+  .status { padding: 12px; border-radius: 4px; margin-bottom: 12px; font-size: 14px; }
+  .status.pending { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
+  .status.success { background: rgba(16, 185, 129, 0.1); color: var(--color-success); }
+  .status.error { background: rgba(239, 68, 68, 0.1); color: var(--color-error); }
+  .status.warning { background: rgba(245, 158, 11, 0.1); color: var(--color-warning); }
+  .response-box { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 4px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--color-text-secondary); max-height: 300px; overflow-y: auto; }
+  button { background: #3B82F6; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+  button:hover { background: #2563EB; }
+</style>
+
+<div class="container">
+  <h1>🔧 Jogg AI Diagnostics</h1>
+
+  <div class="test-section">
+    <h2>API Key Check</h2>
+    <div id="apiKeyStatus" class="status pending">Checking...</div>
+    <button onclick="checkApiKey()">Check API Key</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Avatar Fetch Test</h2>
+    <div id="avatarStatus" class="status pending">Not tested yet</div>
+    <button onclick="testAvatarFetch()">Test Avatar Fetch</button>
+    <div id="avatarResponse" class="response-box" style="display: none; margin-top: 12px;"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Direct API Connection</h2>
+    <div id="directStatus" class="status pending">Not tested yet</div>
+    <button onclick="testDirectAPI()">Test Direct API</button>
+    <div id="directResponse" class="response-box" style="display: none; margin-top: 12px;"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Troubleshooting Tips</h2>
+    <ul style="margin-left: 20px; color: var(--color-text-secondary);">
+      <li style="margin-bottom: 8px;">Ensure <code>JOGG_AI_API_KEY</code> is in your .env file</li>
+      <li style="margin-bottom: 8px;">Check if the API key is valid and not expired</li>
+      <li style="margin-bottom: 8px;">Verify the endpoint URL is correct: <code>https://api.jogg.ai/v1/avatars</code></li>
+      <li style="margin-bottom: 8px;">Check network tab in browser for CORS issues</li>
+      <li style="margin-bottom: 8px;">Ensure the API key has proper permissions for avatar retrieval</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+async function checkApiKey() {
+  const statusEl = document.getElementById('apiKeyStatus');
+  statusEl.className = 'status pending';
+  statusEl.textContent = 'Checking...';
+
+  try {
+    const res = await fetch('/api/jogg-test');
+    const data = await res.json();
+
+    if (data.apiKeySet) {
+      statusEl.className = 'status success';
+      statusEl.innerHTML = `✓ API Key is set (length: ${data.apiKeyLength}, prefix: ${data.apiKeyPrefix}...)`;
+    } else {
+      statusEl.className = 'status error';
+      statusEl.innerHTML = `✗ API Key NOT SET - Add JOGG_AI_API_KEY to .env`;
+    }
+  } catch (err) {
+    statusEl.className = 'status error';
+    statusEl.textContent = `✗ Error: ${err.message}`;
+  }
+}
+
+async function testAvatarFetch() {
+  const statusEl = document.getElementById('avatarStatus');
+  const responseEl = document.getElementById('avatarResponse');
+  statusEl.className = 'status pending';
+  statusEl.textContent = 'Fetching avatars...';
+  responseEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/jogg-avatars');
+    const data = await res.json();
+
+    if (res.ok) {
+      statusEl.className = 'status success';
+      statusEl.textContent = `✓ Successfully fetched avatars (${Array.isArray(data) ? data.length : 'unknown'} avatars)`;
+      responseEl.textContent = JSON.stringify(data, null, 2);
+      responseEl.style.display = 'block';
+    } else {
+      statusEl.className = 'status error';
+      statusEl.textContent = `✗ Error: ${res.status} ${res.statusText}`;
+      responseEl.textContent = JSON.stringify(data, null, 2);
+      responseEl.style.display = 'block';
+    }
+  } catch (err) {
+    statusEl.className = 'status error';
+    statusEl.textContent = `✗ Error: ${err.message}`;
+  }
+}
+
+async function testDirectAPI() {
+  const statusEl = document.getElementById('directStatus');
+  const responseEl = document.getElementById('directResponse');
+  statusEl.className = 'status pending';
+  statusEl.textContent = 'Testing direct API...';
+  responseEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/jogg-test');
+    const data = await res.json();
+
+    if (data.success) {
+      statusEl.className = 'status success';
+      statusEl.textContent = `✓ Direct API connection successful`;
+    } else if (data.error) {
+      statusEl.className = 'status error';
+      statusEl.textContent = `✗ API Error: ${data.error}`;
+    } else {
+      statusEl.className = 'status warning';
+      statusEl.textContent = `⚠ API Response: Status ${data.joggApiStatus}`;
+    }
+
+    responseEl.textContent = JSON.stringify(data, null, 2);
+    responseEl.style.display = 'block';
+  } catch (err) {
+    statusEl.className = 'status error';
+    statusEl.textContent = `✗ Error: ${err.message}`;
+  }
+}
+
+// Auto-check on load
+window.addEventListener('load', checkApiKey);
+</script>

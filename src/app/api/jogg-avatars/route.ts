@@ -14,7 +14,7 @@ export async function GET() {
 
     console.log('Fetching avatars from Jogg AI...');
 
-    const res = await fetch('https://api.jogg.ai/v2/avatar/public', {
+    const res = await fetch('https://api.jogg.ai/v1/avatars', {
       method: 'GET',
       headers: {
         'x-api-key': joggKey,
