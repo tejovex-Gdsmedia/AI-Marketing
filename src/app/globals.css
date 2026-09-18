@@ -67,6 +67,20 @@
   100% { background-position: 200% 0; }
 }
 
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+  50% { box-shadow: 0 0 40px rgba(255,255,255,0.25); }
+}
+
+.glow-text {
+  text-shadow: 0 0 40px rgba(255,255,255,0.2);
+}
+
 .glass-card {
   background: rgba(255,255,255,0.025);
   border: 1px solid rgba(255,255,255,0.06);
