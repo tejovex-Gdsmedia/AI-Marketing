@@ -34,8 +34,9 @@ export async function GET() {
     }
 
     const data = await res.json();
-    console.log('Avatars fetched successfully:', data);
+    console.log('Avatars fetched successfully, count:', data.data?.avatars?.length || 'unknown');
 
+    // Return the full response as-is so frontend can parse it
     return NextResponse.json(data);
   } catch (error) {
     console.error('Avatar fetch error:', error);
@@ -45,3 +46,4 @@ export async function GET() {
     );
   }
 }
+
