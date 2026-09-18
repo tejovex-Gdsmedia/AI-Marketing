@@ -1451,23 +1451,42 @@ function AdvancedVideoGeneratorView({
     if (selectedModel?.id === 'jogg-ai') {
       setLoadingAvatars(true)
       fetch('/api/jogg-avatars')
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`API error: ${res.status}`)
+          }
+          return res.json()
+        })
         .then(data => {
-          console.log('Avatar response:', data)
+          console.log('Full Avatar response:', data)
+          console.log('data.data:', data.data)
+          console.log('data.data?.avatars:', data.data?.avatars)
+
           // Avatar API returns { data: { avatars: [...] } }
-          const avatarList = data.data?.avatars || data.data
-          if (avatarList && Array.isArray(avatarList)) {
+          let avatarList = null
+
+          if (data.data?.avatars && Array.isArray(data.data.avatars)) {
+            avatarList = data.data.avatars
+          } else if (data.data && Array.isArray(data.data)) {
+            avatarList = data.data
+          } else if (Array.isArray(data)) {
+            avatarList = data
+          }
+
+          console.log('Parsed avatarList:', avatarList)
+
+          if (avatarList && avatarList.length > 0) {
             setAvatars(avatarList)
             // Set default avatar if available
-            if (avatarList.length > 0 && !selectedAvatarId) {
+            if (!selectedAvatarId) {
               setSelectedAvatarId(avatarList[0].avatar_id)
             }
           } else if (data.error) {
             console.error('Avatar fetch error:', data.error)
             setError(`Avatar loading error: ${data.error}`)
           } else {
-            console.error('Unexpected response format:', data)
-            setError('Unexpected response format from avatars API')
+            console.error('No avatars found in response:', data)
+            setError('No avatars available')
           }
           setLoadingAvatars(false)
         })
@@ -1477,7 +1496,7 @@ function AdvancedVideoGeneratorView({
           setLoadingAvatars(false)
         })
     }
-  }, [selectedModel?.id])
+  }, [selectedModel?.id, selectedAvatarId])
 
   async function handleGenerateConcept() {
     if (!conceptInput.trim()) return
