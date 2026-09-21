@@ -1191,6 +1191,7 @@ function AdsView({ data }: { data: AdsResult }) {
 // ─── SEO View ─────────────────────────────────────────────────────────────────
 
 function SeoView({ data }: { data: SeoResult }) {
+  if (!data) return null;
   const comparison = data.competitor_comparison
   const competitors = comparison?.competitors ? Object.entries(comparison.competitors) : []
 
@@ -1253,7 +1254,7 @@ function SeoView({ data }: { data: SeoResult }) {
       {comparison?.missing_elements && comparison.missing_elements.length > 0 && (
         <Card title="What Competitors Have That You Don't">
           <div className="space-y-3">
-            {comparison.missing_elements.map((item, i) => (
+            {(comparison.missing_elements ?? []).map((item, i) => (
               <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm font-medium text-white">{item.issue}</p>
@@ -1273,7 +1274,7 @@ function SeoView({ data }: { data: SeoResult }) {
                   <div className="mt-2">
                     <p className="text-xs text-white/30 mb-1">Competitors doing this better:</p>
                     <div className="flex flex-wrap gap-1">
-                      {item.competitors_doing_it.map((comp, j) => (
+                      {(item.competitors_doing_it ?? []).map((comp, j) => (
                         <span key={j} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/50 border border-white/10">{comp}</span>
                       ))}
                     </div>
@@ -1299,18 +1300,22 @@ function SeoView({ data }: { data: SeoResult }) {
 
       <Card title="Quick Wins">
         <div className="space-y-2">
-          {data.quick_wins.map((w, i) => (
-            <div key={i} className="flex gap-3 p-3 rounded-xl bg-green-400/5 border border-green-400/10">
-              <span className="text-green-400">✓</span>
-              <p className="text-sm text-white/70">{w}</p>
-            </div>
-          ))}
+          {(!data?.quick_wins || data.quick_wins.length === 0) ? (
+            <p className="text-white/50 text-sm">No quick wins available</p>
+          ) : (
+            data.quick_wins.map((w: string, i: number) => (
+              <div key={i} className="flex gap-3 p-3 rounded-xl bg-green-400/5 border border-green-400/10">
+                <span className="text-green-400">✓</span>
+                <p className="text-sm text-white/70">{w}</p>
+              </div>
+            ))
+          )}
         </div>
       </Card>
 
       <Card title="Technical Issues">
         <div className="space-y-3">
-          {data.technical_issues.map((t, i) => (
+          {(data.technical_issues ?? []).map((t, i) => (
             <div key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-sm font-medium text-white">{t.issue}</p>
@@ -1324,7 +1329,7 @@ function SeoView({ data }: { data: SeoResult }) {
 
       <Card title="Keyword Rankings">
         <div className="space-y-2">
-          {data.keyword_rankings.map((k, i) => (
+          {(data.keyword_rankings ?? []).map((k, i) => (
             <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
               <p className="text-sm text-white/70">{k.keyword}</p>
               <div className="flex items-center gap-3">
@@ -1338,11 +1343,11 @@ function SeoView({ data }: { data: SeoResult }) {
 
       <Card title="3-Month SEO Plan">
         <div className="space-y-3">
-          {data.monthly_seo_plan.map((m) => (
+          {(data.monthly_seo_plan ?? []).map((m) => (
             <div key={m.month} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
               <p className="text-sm font-medium text-amber-400 mb-2">Month {m.month} — {m.focus}</p>
               <ul className="space-y-1">
-                {m.tasks.map((t, i) => (
+                {(m.tasks ?? []).map((t, i) => (
                   <li key={i} className="text-xs text-white/50 flex gap-2"><span>•</span>{t}</li>
                 ))}
               </ul>
