@@ -48,6 +48,10 @@ export interface VideoModel {
   badge?: string
 }
 
+// REMOVED: Veo 3 Fast (gemini - requires Vertex AI / no public site API)
+// REMOVED: Hailuo 2.3 (fal/minimax - I2V only, limited flexibility)
+// REMOVED: Wan 2.7 (alibaba - requires Alibaba Cloud / unstable for web backend)
+
 export const VIDEO_MODELS: VideoModel[] = [
   // ─── KLING 3.0 ───
   {
@@ -73,32 +77,6 @@ export const VIDEO_MODELS: VideoModel[] = [
     specialFeatures: ['multi-shot (up to 6 shots)', 'total duration cannot exceed 15s'],
     description: 'Advanced motion and realistic physics',
     badge: 'Latest',
-  },
-
-  // ─── VEO 3 FAST ───
-  {
-    id: 'veo-3-fast',
-    name: 'Veo 3 Fast',
-    company: 'Google',
-    provider: 'gemini',
-    providerModelId: 'veo-003',
-    tier: 'premium',
-    types: ['text_to_video', 'image_to_video'],
-    supportsT2V: true,
-    supportsI2V: true,
-    pricePerSecond: 0.15,
-    defaultDuration: 8,
-    durationOptions: [4, 6, 8],
-    maxDuration: 8,
-    resolutions: ['720p', '1080p'],
-    defaultResolution: '1080p',
-    aspectRatios: ['16:9', '9:16'],
-    nativeAudio: true,
-    extendable: true,
-    specialFeatures: ['Veo 3.1 Extend up to 148s'],
-    durationInputType: 'dropdown',
-    description: 'Fast cinematic video generation',
-    badge: 'Fast',
   },
 
   // ─── RUNWAY GEN-4 TURBO ───
@@ -127,6 +105,29 @@ export const VIDEO_MODELS: VideoModel[] = [
     badge: 'Turbo',
   },
 
+  // ─── LUMA RAY 2 ───
+  {
+    id: 'luma-ray-2',
+    name: 'Luma Ray 2',
+    company: 'Luma AI',
+    provider: 'luma',
+    providerModelId: 'luma-ray-2',
+    tier: 'standard',
+    types: ['text_to_video', 'image_to_video'],
+    supportsT2V: true,
+    supportsI2V: true,
+    defaultDuration: 5,
+    durationOptions: [5, 9],
+    maxDuration: 9,
+    resolutions: ['540p', '720p', '1080p', '4K'],
+    defaultResolution: '1080p',
+    aspectRatios: ['16:9', '9:16', '1:1', '4:3', '3:4', '21:9', '9:21'],
+    nativeAudio: false,
+    extendable: true,
+    specialFeatures: ['loop mode', 'keyframe control (start & end frame)', 'extendable up to 30s'],
+    description: 'High-quality video with loop and keyframe support',
+  },
+
   // ─── LUMA RAY 3 (Ray 3.2) ───
   {
     id: 'luma-ray-3',
@@ -152,62 +153,26 @@ export const VIDEO_MODELS: VideoModel[] = [
     badge: 'Pro',
   },
 
-  // ─── HAILUO 2.3 ───
+  // ─── SEEDANCE 1.0 ───
   {
-    id: 'hailuo-2.3',
-    name: 'Hailuo 2.3',
-    company: 'MiniMax',
-    provider: 'fal',
-    providerModelId: 'fal-ai/minimax/video-01',
+    id: 'seedance-1.0',
+    name: 'Seedance 1.0',
+    company: 'ByteDance',
+    provider: 'bytedance',
+    providerModelId: 'fal-ai/bytedance/seedance-v1',
     tier: 'standard',
-    types: ['image_to_video'],
-    supportsT2V: false,
-    supportsI2V: true,
-    requiresImage: true,
-    pricePerSecond: 0.08,
-    defaultDuration: 6,
-    durationOptions: [6],
-    maxDuration: 10,
-    durationByResolution: {
-      '768p': [6],
-      '1080p': [6, 10],
-    },
-    resolutions: ['768p', '1080p'],
-    defaultResolution: '768p',
-    aspectRatios: ['16:9', '9:16'],
-    nativeAudio: false,
-    extendable: false,
-    specialFeatures: [
-      'IMAGE-TO-VIDEO ONLY - No T2V support',
-      'duration options change by resolution',
-      'camera commands: Pan left, Push in, Static shot, etc.',
-    ],
-    description: 'Image-to-video only. Duration options depend on resolution.',
-  },
-
-  // ─── HAILUO 3 ───
-  {
-    id: 'hailuo-3',
-    name: 'Hailuo 3',
-    company: 'MiniMax',
-    provider: 'fal',
-    providerModelId: 'fal-ai/minimax/video-02',
-    tier: 'premium',
     types: ['text_to_video', 'image_to_video'],
     supportsT2V: true,
     supportsI2V: true,
-    pricePerSecond: 0.13,
-    defaultDuration: 6,
-    durationOptions: [6, 10],
+    defaultDuration: 5,
+    durationOptions: [5, 10],
     maxDuration: 10,
-    resolutions: ['1080p', '4K'],
+    resolutions: ['1080p'],
     defaultResolution: '1080p',
     aspectRatios: ['16:9', '9:16', '1:1'],
-    nativeAudio: true,
+    nativeAudio: false,
     extendable: true,
-    specialFeatures: ['T2V + I2V support', 'native audio', '4K support', 'advanced motion control'],
-    description: 'Next-generation Hailuo with T2V support and native audio',
-    badge: 'Latest',
+    description: 'Standard Seedance model with 1080p output',
   },
 
   // ─── SEEDANCE 2.0 ───
@@ -233,40 +198,6 @@ export const VIDEO_MODELS: VideoModel[] = [
     specialFeatures: ['multi-shot support', '2K resolution', 'native audio'],
     description: 'Pro version with 2K output and native audio',
     badge: 'Pro',
-  },
-
-  // ─── WAN 2.7 ───
-  {
-    id: 'wan-2.7',
-    name: 'Wan 2.7',
-    company: 'Alibaba',
-    provider: 'alibaba',
-    providerModelId: 'fal-ai/wan-2.7',
-    tier: 'standard',
-    types: ['text_to_video', 'image_to_video'],
-    supportsT2V: true,
-    supportsI2V: true,
-    pricePerSecond: 0.10,
-    defaultDuration: 5,
-    durationOptions: [5, 10],
-    durationByMode: {
-      't2v': [5],
-      'i2v': [5, 10],
-    },
-    maxDuration: 10,
-    resolutions: ['720p'],
-    defaultResolution: '720p',
-    aspectRatios: ['16:9', '9:16', '1:1'],
-    nativeAudio: false,
-    extendable: true,
-    specialFeatures: [
-      'T2V max: 5s only',
-      'I2V max: 10s',
-      'infinite chaining available',
-      'most cost-efficient model',
-      'also supports r2v (reference-to-video)',
-    ],
-    description: 'Most cost-efficient. Duration changes by T2V/I2V mode.',
   },
 
   // ─── PIKA 2.2 ───

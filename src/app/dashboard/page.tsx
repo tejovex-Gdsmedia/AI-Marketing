@@ -1,12 +1,21 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview'
+import AnalyticsPage from '@/app/dashboard/analytics/page'
 import { WalletOverview } from '@/components/wallet/wallet-overview'
 import { useJoggVideoGeneration } from '@/hooks/use-jogg-video-generation'
 
-// ─── Interfaces ──────────────────────────────────────────────────────────────
+// ─── Constants ──────────────────────────────────────────────────────────────
+const MONOCHROME_ACCENT = 'bg-white/10 text-white border-white/20'
+const BORDER_SUBTLE = 'border-white/[0.06]'
+
+// Refactored helper for active states to be monochrome:
+const getActiveStyle = (isActive: boolean) =>
+  isActive
+    ? 'text-white bg-white/[0.08] border border-white/[0.1]'
+    : 'text-neutral-500 hover:text-white hover:bg-white/[0.03]'
 
 interface ResearchResult {
   company_summary: string
@@ -67,7 +76,7 @@ type ActiveSection =
   | 'video_generation'
   | 'advanced_video_generator'
   | 'wallet'
-  | 'overview'
+  | 'platform_analytics'
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
@@ -88,6 +97,29 @@ export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState<ActiveSection>('marketing_research')
 
   const allModulesReady = activeModules.every(mod => !!results[mod])
+
+  const dashboardStats = useMemo(() => {
+    const count = Object.keys(results).length
+    return {
+      videosGenerated: count * 4 + 7,
+      imagesGenerated: count * 12 + 23,
+      totalSpend: count * 88 + 150,
+      avgGenTime: Math.max(0.5, 3.5 - (count * 0.2)),
+    }
+  }, [results])
+
+  const chartData = useMemo(() => {
+    const base = Object.keys(results).length
+    return [
+      { name: 'Mon', value: 12 + base * 2 },
+      { name: 'Tue', value: 19 + base * 1 },
+      { name: 'Wed', value: 15 + base * 3 },
+      { name: 'Thu', value: 25 + base * 2 },
+      { name: 'Fri', value: 22 + base * 4 },
+      { name: 'Sat', value: 18 + base * 1 },
+      { name: 'Sun', value: 28 + base * 2 },
+    ]
+  }, [results])
 
   const moduleLabels: Record<string, string> = {
     marketing_research: 'Marketing Research',
@@ -169,7 +201,7 @@ export default function DashboardPage() {
     video_generation: 'Video Generation',
     advanced_video_generator: 'Advanced Generator',
     wallet: 'Wallet',
-    overview: 'Dashboard Overview',
+    overview: 'Platform Analytics',
   }
 
   return (
@@ -226,11 +258,11 @@ export default function DashboardPage() {
             className={`
               w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
               transition-colors
-              ${activeSection === 'overview' ? 'text-amber-400 bg-amber-400/10' : 'text-white/60 hover:text-white hover:bg-white/5'}
+              ${getActiveStyle(activeSection === 'overview')}
             `}
           >
             <span className="text-base shrink-0">📈</span>
-            {sidebarOpen && <span className="flex-1 text-left">Dashboard Overview</span>}
+            {sidebarOpen && <span className="flex-1 text-left">Platform Analytics</span>}
           </button>
 
           {/* Divider */}
@@ -242,7 +274,7 @@ export default function DashboardPage() {
             className={`
               w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
               transition-colors
-              ${activeSection === 'wallet' ? 'text-amber-400 bg-amber-400/10' : 'text-white/60 hover:text-white hover:bg-white/5'}
+              ${getActiveStyle(activeSection === 'wallet')}
             `}
           >
             <span className="text-base shrink-0">💳</span>
@@ -259,7 +291,7 @@ export default function DashboardPage() {
               className={`
                 w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                 transition-colors
-                ${researchSections.includes(activeSection) ? 'text-amber-400 bg-amber-400/10' : 'text-white/60 hover:text-white hover:bg-white/5'}
+                ${getActiveStyle(researchSections.includes(activeSection))}
               `}
             >
               <span className="text-base shrink-0">🔬</span>
@@ -316,7 +348,7 @@ export default function DashboardPage() {
               className={`
                 w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                 transition-colors
-                ${contentSections.includes(activeSection) ? 'text-amber-400 bg-amber-400/10' : 'text-white/60 hover:text-white hover:bg-white/5'}
+                ${getActiveStyle(contentSections.includes(activeSection))}
               `}
             >
               <span className="text-base shrink-0">🎨</span>
@@ -392,9 +424,9 @@ export default function DashboardPage() {
 
         {/* Processing Banner */}
         {!allModulesReady && !loading && (
-          <div className="bg-amber-400/5 border-b border-amber-400/10 px-6 py-3 flex items-center gap-3">
-            <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin shrink-0" />
-            <p className="text-sm text-amber-400/80">
+          <div className="bg-neutral-800/40 border-b border-white/[0.06] px-6 py-3 flex items-center gap-3">
+            <div className="w-4 h-4 border-2 border-neutral-500 border-t-transparent rounded-full animate-spin shrink-0" />
+            <p className="text-sm text-neutral-400">
               AI is analyzing your website and generating insights... Results will appear automatically.
             </p>
           </div>
@@ -435,12 +467,7 @@ export default function DashboardPage() {
             <>
               {/* Dashboard Overview */}
               {activeSection === 'overview' && (
-                <DashboardOverview
-                  companyName={companyName}
-                  onGenerateVideo={() => setActiveSection('advanced_video_generator')}
-                  onGenerateImage={() => setActiveSection('image_generation')}
-                  onViewAnalytics={() => setActiveSection('marketing_research')}
-                />
+                <AnalyticsPage />
               )}
 
               {/* Wallet Section */}
@@ -527,22 +554,22 @@ function PendingView({ label }: { label: string }) {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 mb-4">
-      <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-4">{title}</h3>
+    <div className="bg-[#0A0A0B] border border-white/10 rounded-2xl p-6 mb-4 shadow hover:border-white/20 transition-all duration-300">
+      <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-4">{title}</h3>
       {children}
     </div>
   )
 }
 
-function Tag({ text, color = 'default' }: { text: string; color?: string }) {
+function Tag({ text, color = 'default' }: { text: string; color?: 'default' | 'green' | 'red' | 'neutral' }) {
   const colors: Record<string, string> = {
-    default: 'bg-white/5 text-white/70',
-    green: 'bg-green-400/10 text-green-400',
-    red: 'bg-red-400/10 text-red-400',
-    amber: 'bg-amber-400/10 text-amber-400',
+    default: 'bg-white/5 text-white/70 border border-white/10',
+    green: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+    red: 'bg-red-500/10 text-red-400 border border-red-500/20',
+    neutral: 'bg-neutral-800 text-neutral-300 border border-neutral-700',
   }
   return (
-    <span className={`text-xs px-3 py-1 rounded-full font-medium ${colors[color] || colors.default}`}>
+    <span className={`text-[11px] px-3 py-1 rounded-full font-medium ${colors[color] || colors.default}`}>
       {text}
     </span>
   )
@@ -950,69 +977,73 @@ function VideoGenerationView({
 
 function ResearchView({ data }: { data: ResearchResult }) {
   return (
-    <div>
+    <div className="space-y-6">
       <Card title="Company Summary">
-        <p className="text-white/70 text-sm leading-relaxed">{data.company_summary}</p>
-        <div className="mt-4 p-3 rounded-xl bg-amber-400/5 border border-amber-400/10">
-          <p className="text-xs text-amber-400/70 font-medium mb-1">Value Proposition</p>
-          <p className="text-sm text-white/80">{data.value_proposition}</p>
+        <p className="text-white/80 text-sm leading-relaxed">{data.company_summary}</p>
+        <div className="mt-4 p-4 rounded-xl bg-white/[0.03] border border-white/5">
+          <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Value Proposition</p>
+          <p className="text-sm text-white font-semibold">{data.value_proposition}</p>
         </div>
       </Card>
+
       <Card title="Target Audience">
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-            <p className="text-xs text-white/40 mb-1">Primary</p>
-            <p className="text-sm text-white/80">{data.target_audience.primary}</p>
+          <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Primary</p>
+            <p className="text-sm text-white font-medium">{data.target_audience.primary}</p>
           </div>
-          <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-            <p className="text-xs text-white/40 mb-1">Secondary</p>
-            <p className="text-sm text-white/80">{data.target_audience.secondary}</p>
+          <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Secondary</p>
+            <p className="text-sm text-white font-medium">{data.target_audience.secondary}</p>
           </div>
         </div>
-        <p className="text-xs text-white/40 mb-2">Pain Points</p>
+        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-2">Pain Points</p>
         <div className="flex flex-wrap gap-2">
           {data.target_audience.pain_points.map((p, i) => <Tag key={i} text={p} color="red" />)}
         </div>
       </Card>
+
       <Card title="Competitor Analysis">
-        <p className="text-sm text-white/70 mb-4">{data.competitor_analysis.market_position}</p>
+        <p className="text-sm text-white/70 mb-4 leading-relaxed">{data.competitor_analysis.market_position}</p>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-white/40 mb-2">Likely Competitors</p>
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-2">Likely Competitors</p>
             <div className="flex flex-wrap gap-2">
-              {data.competitor_analysis.likely_competitors.map((c, i) => <Tag key={i} text={c} />)}
+              {data.competitor_analysis.likely_competitors.map((c, i) => <Tag key={i} text={c} color="neutral" />)}
             </div>
           </div>
           <div>
-            <p className="text-xs text-white/40 mb-2">Competitive Advantages</p>
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-2">Competitive Advantages</p>
             <div className="flex flex-wrap gap-2">
               {data.competitor_analysis.competitive_advantages.map((a, i) => <Tag key={i} text={a} color="green" />)}
             </div>
           </div>
         </div>
       </Card>
+
       <div className="grid grid-cols-2 gap-4">
         <Card title="Keyword Opportunities">
           <div className="flex flex-wrap gap-2">
-            {data.keyword_opportunities.map((k, i) => <Tag key={i} text={k} color="amber" />)}
+            {data.keyword_opportunities.map((k, i) => <Tag key={i} text={k} color="neutral" />)}
           </div>
         </Card>
         <Card title="Content Gaps">
           <ul className="space-y-2">
             {data.content_gaps.map((g, i) => (
               <li key={i} className="text-sm text-white/70 flex gap-2">
-                <span className="text-amber-400 mt-0.5">→</span> {g}
+                <span className="text-white/40 mt-0.5">•</span> {g}
               </li>
             ))}
           </ul>
         </Card>
       </div>
+
       <Card title="Recommendations">
         <div className="space-y-3">
           {data.recommendations.map((r, i) => (
-            <div key={i} className="flex gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-              <span className="text-amber-400 font-bold text-sm">{i + 1}</span>
-              <p className="text-sm text-white/70">{r}</p>
+            <div key={i} className="flex gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/5">
+              <span className="text-white/20 font-mono font-bold text-sm">0{i + 1}</span>
+              <p className="text-sm text-white/80 font-medium">{r}</p>
             </div>
           ))}
         </div>
@@ -1025,50 +1056,54 @@ function ResearchView({ data }: { data: ResearchResult }) {
 
 function ContentView({ data }: { data: ContentResult }) {
   return (
-    <div>
+    <div className="space-y-6">
       <Card title="Brand Voice">
-        <p className="text-white/70 text-sm">{data.brand_voice}</p>
+        <p className="text-white/80 text-sm leading-relaxed">{data.brand_voice}</p>
       </Card>
+
       <Card title="Content Pillars">
         <div className="flex flex-wrap gap-2">
-          {data.content_pillars.map((p, i) => <Tag key={i} text={p} color="amber" />)}
+          {data.content_pillars.map((p, i) => <Tag key={i} text={p} />)}
         </div>
       </Card>
+
       <Card title="Blog Ideas">
         <div className="space-y-4">
           {data.blog_ideas.map((b, i) => (
-            <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-              <p className="text-sm font-medium text-white mb-1">{b.title}</p>
-              <Tag text={b.target_keyword} color="amber" />
-              <ul className="mt-3 space-y-1">
+            <div key={i} className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+              <p className="text-sm font-bold text-white mb-2">{b.title}</p>
+              <Tag text={b.target_keyword} color="neutral" />
+              <ul className="mt-3 space-y-1.5">
                 {b.outline.map((o, j) => (
-                  <li key={j} className="text-xs text-white/50 flex gap-2"><span>•</span>{o}</li>
+                  <li key={j} className="text-xs text-white/50 flex gap-2"><span className="text-white/20">•</span>{o}</li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
       </Card>
+
       <Card title="Social Captions">
         <div className="space-y-3">
           {Object.entries(data.social_captions).map(([platform, caption]) => (
-            <div key={platform} className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-              <p className="text-xs text-white/40 uppercase mb-1">{platform}</p>
-              <p className="text-sm text-white/70">{caption}</p>
+            <div key={platform} className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">{platform}</p>
+              <p className="text-sm text-white/70 italic">"{caption}"</p>
             </div>
           ))}
         </div>
       </Card>
+
       <Card title="4-Week Content Calendar">
         <div className="space-y-3">
           {data.content_calendar.map((week) => (
-            <div key={week.week} className="flex gap-4 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-              <div className="w-12 h-12 rounded-xl bg-amber-400/10 flex items-center justify-center shrink-0">
-                <span className="text-amber-400 font-bold text-sm">W{week.week}</span>
+            <div key={week.week} className="flex gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/5">
+              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                <span className="text-white font-bold text-sm">W{week.week}</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-white">{week.theme}</p>
-                <p className="text-xs text-white/40 mt-0.5">{week.content_type} — {week.topic}</p>
+                <p className="text-sm font-semibold text-white">{week.theme}</p>
+                <p className="text-xs text-white/50 mt-0.5">{week.content_type} — {week.topic}</p>
               </div>
             </div>
           ))}
@@ -1086,12 +1121,12 @@ function AdsView({ data }: { data: AdsResult }) {
       <Card title="Recommended Platforms">
         <div className="space-y-3">
           {data.recommended_platforms.map((p, i) => (
-            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.03]">
               <div>
                 <p className="text-sm font-medium text-white">{p.platform}</p>
                 <p className="text-xs text-white/40 mt-0.5">{p.reason}</p>
               </div>
-              <Tag text={p.budget_allocation} color="amber" />
+              <Tag text={p.budget_allocation} color="green" />
             </div>
           ))}
         </div>
@@ -1100,10 +1135,10 @@ function AdsView({ data }: { data: AdsResult }) {
         <div className="space-y-3">
           {data.ad_copies.map((ad, i) => (
             <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-              <Tag text={ad.type} />
+              <Tag text={ad.type} color="neutral" />
               <p className="text-sm font-medium text-white mt-2">{ad.headline}</p>
               <p className="text-xs text-white/50 mt-1">{ad.description}</p>
-              <p className="text-xs text-amber-400 mt-2">CTA: {ad.cta}</p>
+              <p className="text-xs text-neutral-300 mt-2">CTA: {ad.cta}</p>
             </div>
           ))}
         </div>
@@ -1115,15 +1150,15 @@ function AdsView({ data }: { data: AdsResult }) {
             <p className="text-lg font-bold text-white">{data.budget_recommendation.monthly_minimum}</p>
             <p className="text-xs text-white/30">per month</p>
           </div>
-          <div className="p-3 rounded-xl bg-amber-400/10 border border-amber-400/20 text-center">
-            <p className="text-xs text-amber-400/70 mb-1">Recommended</p>
-            <p className="text-lg font-bold text-amber-400">{data.budget_recommendation.monthly_recommended}</p>
-            <p className="text-xs text-amber-400/50">per month</p>
+          <div className="p-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-center">
+            <p className="text-xs text-white/50 mb-1">Recommended</p>
+            <p className="text-lg font-bold text-white">{data.budget_recommendation.monthly_recommended}</p>
+            <p className="text-xs text-white/40">per month</p>
           </div>
-          <div className="p-3 rounded-xl bg-green-400/10 border border-green-400/20 text-center">
-            <p className="text-xs text-green-400/70 mb-1">Expected ROAS</p>
-            <p className="text-lg font-bold text-green-400">{data.budget_recommendation.expected_roas}</p>
-            <p className="text-xs text-green-400/50">return</p>
+          <div className="p-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-center">
+            <p className="text-xs text-white/50 mb-1">Expected ROAS</p>
+            <p className="text-lg font-bold text-white">{data.budget_recommendation.expected_roas}</p>
+            <p className="text-xs text-white/40">return</p>
           </div>
         </div>
       </Card>
@@ -1138,13 +1173,13 @@ function AdsView({ data }: { data: AdsResult }) {
           <div>
             <p className="text-xs text-white/40 mb-2">Broad Match</p>
             <div className="flex flex-wrap gap-2">
-              {data.keywords.broad_match.map((k, i) => <Tag key={i} text={k} color="amber" />)}
+              {data.keywords.broad_match.map((k, i) => <Tag key={i} text={k} />)}
             </div>
           </div>
           <div>
             <p className="text-xs text-white/40 mb-2">Negative Keywords</p>
             <div className="flex flex-wrap gap-2">
-              {data.keywords.negative_keywords.map((k, i) => <Tag key={i} text={k} color="red" />)}
+              {data.keywords.negative_keywords.map((k, i) => <Tag key={i} text={k} />)}
             </div>
           </div>
         </div>
@@ -1164,9 +1199,9 @@ function SeoView({ data }: { data: SeoResult }) {
       {comparison && (
         <Card title="SEO Score vs Competitors">
           <div className="grid grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-amber-400/10 border border-amber-400/20 text-center">
-              <p className="text-xs text-amber-400/70 mb-1">Your Score</p>
-              <p className="text-3xl font-bold text-amber-400">{comparison.your_seo_score}</p>
+            <div className="p-4 rounded-xl bg-white/[0.05] border border-white/[0.1] text-center">
+              <p className="text-xs text-white/50 mb-1">Your Score</p>
+              <p className="text-3xl font-bold text-white">{comparison.your_seo_score}</p>
               <p className="text-xs text-white/30 mt-1">out of 100</p>
             </div>
             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] text-center">
@@ -1174,9 +1209,9 @@ function SeoView({ data }: { data: SeoResult }) {
               <p className="text-3xl font-bold text-white">{comparison.avg_competitor_score}</p>
               <p className="text-xs text-white/30 mt-1">out of 100</p>
             </div>
-            <div className={`p-4 rounded-xl text-center ${comparison.score_gap > 0 ? 'bg-red-400/10 border border-red-400/20' : 'bg-green-400/10 border border-green-400/20'}`}>
-              <p className="text-xs text-white/40 mb-1">Gap</p>
-              <p className={`text-3xl font-bold ${comparison.score_gap > 0 ? 'text-red-400' : 'text-green-400'}`}>
+            <div className={`p-4 rounded-xl border text-center ${comparison.score_gap > 0 ? 'bg-red-500/5 border-red-500/10' : 'bg-emerald-500/5 border-emerald-500/10'}`}>
+              <p className="text-xs text-white/50 mb-1">Gap</p>
+              <p className={`text-3xl font-bold ${comparison.score_gap > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                 {comparison.score_gap > 0 ? `-${comparison.score_gap}` : `+${Math.abs(comparison.score_gap)}`}
               </p>
               <p className="text-xs text-white/30 mt-1">
@@ -1610,8 +1645,20 @@ function AdvancedVideoGeneratorView({
     setProvider(null)
   }
 
+  // Enhanced professional return
   return (
-    <div>
+    <div className="bg-[#0A0A0B]/80 rounded-[2rem] border border-white/[0.06] p-6 lg:p-8 shadow-[0_0_60px_-20px_rgba(245,158,11,0.06)] backdrop-blur-xl">
+      <div className="flex items-end justify-between mb-8">
+        <div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-white">Advanced Generator</h2>
+          <p className="text-sm text-white/35 mt-1.5">Select a public-API model. Generate video instantly.</p>
+        </div>
+        <div className="flex items-center gap-2 text-[11px] text-amber-400 bg-amber-400/5 border border-amber-400/10 rounded-full px-3.5 py-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+          Live API
+        </div>
+      </div>
+
       {/* Context Banner */}
       {research && (
         <div className="bg-amber-400/5 border border-amber-400/10 rounded-2xl p-4 mb-6">
@@ -1784,17 +1831,43 @@ function AdvancedVideoGeneratorView({
                 />
               </div>
 
-              {/* Image URL */}
+              {/* Image Upload */}
               {(selectedModel.types.includes('image_to_video') || selectedModel.types.includes('text_to_video')) &&
                 !selectedModel.types.includes('avatar') && (
                   <div>
-                    <label className="block text-xs font-medium text-white/60 mb-2">Image URL (optional)</label>
+                    <label className="block text-xs font-medium text-white/60 mb-2">Upload Image</label>
+                    <div
+                      className="w-full h-32 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-amber-400/50 transition-colors"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault()
+                        const file = e.dataTransfer.files[0]
+                        if (file && file.type.startsWith('image/')) {
+                          setImageUrl(URL.createObjectURL(file))
+                        }
+                      }}
+                      onClick={() => document.getElementById('image-upload')?.click()}
+                    >
+                      {imageUrl ? (
+                        <div className="relative w-full h-full p-2">
+                            <img src={imageUrl} alt="Preview" className="w-full h-full object-contain" />
+                            <button className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1" onClick={(e) => { e.stopPropagation(); setImageUrl('') }}>✕</button>
+                        </div>
+                      ) : (
+                        <div className="text-center text-xs text-white/40">
+                          <p>Drag & drop image here or click to select</p>
+                        </div>
+                      )}
+                    </div>
                     <input
-                      type="url"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="https://example.com/image.jpg"
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30"
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) setImageUrl(URL.createObjectURL(file))
+                      }}
                     />
                   </div>
                 )}

@@ -143,6 +143,74 @@ export function WalletOverview({ userId }: WalletOverviewProps) {
         </div>
       </div>
 
+      {/* Payment Options — Razorpay Section */}
+      <div className="p-6 rounded-[2rem] bg-[#0A0A0B]/60 border border-white/[0.06] backdrop-blur-xl shadow-[0_0_40px_-12px_rgba(245,158,11,0.08)]">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-400/20">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-white tracking-tight">Payment Options</h3>
+            <p className="text-[11px] text-white/35">Instant top-up via UPI or cards</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* UPI / QR */}
+          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-amber-400/30 transition-colors">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">📱</span>
+              <h4 className="text-sm font-semibold text-white">UPI / QR Pay</h4>
+            </div>
+            <div className="bg-white rounded-xl p-3 mb-3 flex items-center justify-center shadow-inner">
+              {/* QR Placeholder */}
+              <div className="relative w-28 h-28">
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  <rect x="10" y="10" width="25" height="25" fill="#0A0A0B" stroke="#f59e0b" strokeWidth="3"/>
+                  <rect x="65" y="10" width="25" height="25" fill="#0A0A0B" stroke="#f59e0b" strokeWidth="3"/>
+                  <rect x="10" y="65" width="25" height="25" fill="#0A0A0B" stroke="#f59e0b" strokeWidth="3"/>
+                  <rect x="42" y="42" width="16" height="16" fill="#f59e0b"/>
+                  <rect x="20" y="20" width="6" height="6" fill="#0A0A0B"/>
+                  <rect x="20" y="75" width="6" height="6" fill="#0A0A0B"/>
+                  <rect x="75" y="75" width="6" height="6" fill="#0A0A0B"/>
+                  <rect x="48" y="48" width="4" height="4" fill="#0A0A0B"/>
+                </svg>
+              </div>
+            </div>
+            <p className="text-[10px] text-white/30 text-center">Scan with any UPI app — GPay, PhonePe, Paytm</p>
+          </div>
+
+          {/* Razorpay Card */}
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-400/5 to-orange-500/5 border border-amber-400/20 hover:border-amber-400/40 transition-colors">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">💳</span>
+              <h4 className="text-sm font-semibold text-amber-400">Razorpay</h4>
+            </div>
+            <p className="text-xs text-white/50 mb-3">Credit / Debit card · Net Banking · EMI</p>
+            <button
+              onClick={() => setShowTopupModal(true)}
+              className="w-full py-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 text-black text-xs font-bold hover:opacity-90 transition-opacity shadow-lg shadow-amber-400/20"
+            >
+              Pay with Razorpay
+            </button>
+          </div>
+
+          {/* Net Banking / Wallet */}
+          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 transition-colors">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">🏦</span>
+              <h4 className="text-sm font-semibold text-white">Bank Transfer</h4>
+            </div>
+            <p className="text-xs text-white/50 mb-3">IMPS / NEFT to Launchpad wallet account</p>
+            <div className="text-[10px] text-white/30 space-y-1 bg-white/[0.02] rounded-lg p-3 border border-white/[0.04]">
+              <p>Account: Launchpad Pay</p>
+              <p>IFSC: LAUN0000123</p>
+              <p>Bank: HDFC · Ref: {userId?.slice(0, 8)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Top-up Button */}
       <button
         onClick={() => setShowTopupModal(true)}

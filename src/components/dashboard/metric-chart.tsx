@@ -16,7 +16,7 @@ export function MetricChart({
   title,
   data,
   type = 'line',
-  color = '#FBBF24',
+  color = '#ffffff',
   height = 300,
   showGrid = true,
 }: MetricChartProps) {
@@ -28,8 +28,8 @@ export function MetricChart({
         {type === 'line' ? (
           <LineChart data={data}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />}
-            <XAxis stroke="rgba(255,255,255,0.3)" style={{ fontSize: '12px' }} />
-            <YAxis stroke="rgba(255,255,255,0.3)" style={{ fontSize: '12px' }} />
+            <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{ fontSize: 10 }} tickMargin={6} interval="preserveStartEnd" />
+            <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fontSize: 10 }} tickMargin={6} domain={['auto', 'auto']} />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'rgba(10, 10, 11, 0.9)',
@@ -50,8 +50,8 @@ export function MetricChart({
         ) : (
           <BarChart data={data}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />}
-            <XAxis stroke="rgba(255,255,255,0.3)" style={{ fontSize: '12px' }} />
-            <YAxis stroke="rgba(255,255,255,0.3)" style={{ fontSize: '12px' }} />
+            <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{ fontSize: 10 }} tickMargin={6} interval="preserveStartEnd" />
+            <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fontSize: 10 }} tickMargin={6} domain={['auto', 'auto']} />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'rgba(10, 10, 11, 0.9)',

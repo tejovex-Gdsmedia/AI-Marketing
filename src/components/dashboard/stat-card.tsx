@@ -9,40 +9,46 @@ interface StatCardProps {
     value: number
     isPositive: boolean
   }
-  color?: 'amber' | 'blue' | 'green' | 'purple' | 'red'
+  color?: 'amber' | 'blue' | 'green' | 'purple' | 'red' | 'monochrome'
   onClick?: () => void
 }
 
 const colorMap = {
   amber: {
-    bg: 'bg-amber-400/10',
-    border: 'border-amber-400/20',
-    text: 'text-amber-400',
-    icon: 'bg-amber-400/20',
+    bg: 'bg-neutral-800/40',
+    border: 'border-neutral-700',
+    text: 'text-white',
+    icon: 'bg-neutral-800',
   },
   blue: {
-    bg: 'bg-blue-400/10',
-    border: 'border-blue-400/20',
-    text: 'text-blue-400',
-    icon: 'bg-blue-400/20',
+    bg: 'bg-neutral-800/40',
+    border: 'border-neutral-700',
+    text: 'text-white',
+    icon: 'bg-neutral-800',
   },
   green: {
-    bg: 'bg-green-400/10',
-    border: 'border-green-400/20',
-    text: 'text-green-400',
-    icon: 'bg-green-400/20',
+    bg: 'bg-neutral-800/40',
+    border: 'border-neutral-700',
+    text: 'text-white',
+    icon: 'bg-neutral-800',
   },
   purple: {
-    bg: 'bg-purple-400/10',
-    border: 'border-purple-400/20',
-    text: 'text-purple-400',
-    icon: 'bg-purple-400/20',
+    bg: 'bg-neutral-800/40',
+    border: 'border-neutral-700',
+    text: 'text-white',
+    icon: 'bg-neutral-800',
   },
   red: {
-    bg: 'bg-red-400/10',
-    border: 'border-red-400/20',
-    text: 'text-red-400',
-    icon: 'bg-red-400/20',
+    bg: 'bg-neutral-800/40',
+    border: 'border-neutral-700',
+    text: 'text-white',
+    icon: 'bg-neutral-800',
+  },
+  monochrome: {
+    bg: 'bg-white/[0.03]',
+    border: 'border-white/10',
+    text: 'text-white',
+    icon: 'bg-white/10',
   },
 }
 

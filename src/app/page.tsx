@@ -5,6 +5,9 @@ import MeshBackground from '@/components/ui/mesh-background'
 export default function LandingPage() {
   return (
     <div className="relative min-h-screen bg-[#030303] text-white overflow-hidden selection:bg-white/30">
+      {/* Subtle Grain Overlay */}
+      <div className="fixed inset-0 z-50 pointer-events-none opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+
       {/* Animated Mesh Hero Background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <MeshBackground />
@@ -70,9 +73,10 @@ export default function LandingPage() {
             ].map((f) => (
               <div
                 key={f.title}
-                className="group relative rounded-2xl p-9 bg-[#0a0a0c]/60 border border-white/[0.06] hover:border-white/[0.15] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_25px_60px_rgba(0,0,0,0.7)] overflow-hidden"
+                className="group relative rounded-2xl p-9 bg-[#0a0a0c]/60 border border-white/[0.06] hover:border-white/[0.2] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_50px_rgba(255,255,255,0.05)] overflow-hidden"
               >
-                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mb-6 group-hover:bg-white/[0.08] transition-colors">
                   <f.icon className="w-6 h-6 text-neutral-200" />
                 </div>
