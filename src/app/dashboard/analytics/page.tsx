@@ -824,9 +824,8 @@ export default function AnalyticsPage() {
       <div className="fixed inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
       <div className="relative z-10 max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-6">
-        <AnimatePresence mode="wait">
-          <PageHeader />
-          <TopKPIs />
+        <PageHeader />
+        <TopKPIs />
 
           {/* Module Activity */}
           <ModuleActivityChart />
@@ -855,7 +854,6 @@ export default function AnalyticsPage() {
 
           {/* Recent Runs */}
           <RecentRunsTable />
-        </AnimatePresence>
       </div>
     </div>
   )
