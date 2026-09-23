@@ -16,29 +16,51 @@ export async function GET(request: NextRequest) {
   try {
     // ─── FAL.AI STATUS ─────────────────────────────────────
     if (provider === 'fal' && falModelId) {
-      const result = await fal.queue.status(falModelId, { request_id: jobId });
+      try {
+        const result = await fal.queue.status(falModelId, { requestId: jobId }); 
+        // ↑ Fix 1 & 2: request_id → requestId (camelCase)
 
-      if (result.status === 'COMPLETED') {
-        const data = await fal.queue.result(falModelId, { request_id: jobId });
-        const videoUrl = data?.data?.video?.url || data?.video?.url || null;
-        return NextResponse.json({ status: 'completed', videoUrl });
+        if (result.status === 'COMPLETED') {
+          const data = await fal.queue.result(falModelId, { requestId: jobId });
+          // ↑ Fix 2: requestId here also
+
+          // Fix 3: type cast karke video URL nikalo
+          const output = (data as any)?.data ?? (data as any);
+          const videoUrl =
+            output?.video?.url ||
+            output?.video_url  ||
+            output?.videos?.[0]?.url ||
+            null;
+
+          return NextResponse.json({ status: 'completed', videoUrl });
+        }
+
+        // Fix 4 & 5: FAILED remove kiya — fal SDK sirf IN_QUEUE | IN_PROGRESS | COMPLETED deta hai
+        if (result.status === 'IN_PROGRESS') {
+          return NextResponse.json({ status: 'in_progress' });
+        }
+
+        // IN_QUEUE ya koi aur state
+        return NextResponse.json({ status: 'queued' });
+
+      } catch (falError: any) {
+        // Fal.ai errors yahan pakdo (failed jobs bhi exception throw karte hain)
+        const msg = falError?.message || 'Fal.ai generation failed';
+        return NextResponse.json({ status: 'failed', error: msg });
       }
-
-      if (result.status === 'FAILED') {
-        return NextResponse.json({ status: 'failed', error: result.error || 'Generation failed' });
-      }
-
-      // pending, in_progress
-      return NextResponse.json({ status: result.status === 'IN_PROGRESS' ? 'in_progress' : 'queued' });
     }
 
     // ─── RUNWAY STATUS ───────────────────────────────────────
     if (provider === 'runway') {
       const runwayKey = process.env.RUNWAY_API_KEY!;
       const res = await fetch(`https://api.dev.runwayml.com/v1/tasks/${jobId}`, {
-        headers: { Authorization: `Bearer ${runwayKey}`, 'X-Runway-Version': '2024-11-06' },
+        headers: {
+          Authorization: `Bearer ${runwayKey}`,
+          'X-Runway-Version': '2024-11-06',
+        },
       });
       const data = await res.json();
+
       if (data.status === 'SUCCEEDED') {
         return NextResponse.json({ status: 'completed', videoUrl: data.output?.[0] });
       }
@@ -51,8 +73,11 @@ export async function GET(request: NextRequest) {
     // ─── GEMINI VEO STATUS ─────────────────────────────────
     if (provider === 'gemini') {
       const geminiKey = process.env.GEMINI_API_KEY!;
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${jobId}?key=${geminiKey}`);
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/${jobId}?key=${geminiKey}`
+      );
       const data = await res.json();
+
       if (data.done) {
         const videoUri = data.response?.videos?.[0]?.video?.uri;
         return NextResponse.json({ status: 'completed', videoUrl: videoUri });
@@ -66,26 +91,37 @@ export async function GET(request: NextRequest) {
       if (!joggKey) {
         return NextResponse.json({ error: 'JOGG_AI_API_KEY not configured' }, { status: 500 });
       }
+
       const statusRes = await fetch(`https://api.jogg.ai/v1/video?video_id=${jobId}`, {
         headers: { 'x-api-key': joggKey, 'Content-Type': 'application/json' },
       });
+
       if (!statusRes.ok) {
         const errText = await statusRes.text();
-        return NextResponse.json({ error: `Jogg AI status check failed: ${errText}` }, { status: 500 });
+        return NextResponse.json(
+          { error: `Jogg AI status check failed: ${errText}` },
+          { status: 500 }
+        );
       }
+
       const statusData = await statusRes.json();
       const videoStatus = statusData.data?.status;
       const videoUrl = statusData.data?.video_url;
+
       if (videoStatus === 'completed') {
         return NextResponse.json({ status: 'completed', videoUrl });
       }
       if (videoStatus === 'failed' || videoStatus === 'error') {
-        return NextResponse.json({ status: 'failed', error: statusData.data?.error || 'Video generation failed' });
+        return NextResponse.json({
+          status: 'failed',
+          error: statusData.data?.error || 'Video generation failed',
+        });
       }
       return NextResponse.json({ status: 'pending', progress: statusData.data?.progress || 0 });
     }
 
     return NextResponse.json({ error: 'Unknown provider' }, { status: 400 });
+
   } catch (error) {
     console.error('Status check error:', error);
     return NextResponse.json({ error: 'Status check failed' }, { status: 500 });
