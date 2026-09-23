@@ -116,10 +116,7 @@ export function OnboardingWizard() {
       <header className="shrink-0 px-6 md:px-10 py-5 flex items-center justify-between border-b border-white/[0.04]">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-neutral-800 border border-white/[0.08] flex items-center justify-center">
-              <Rocket className="w-4 h-4 text-neutral-300" />
-            </div>
-            <span className="text-white font-semibold text-sm tracking-tight">Launchpad</span>
+            <img src="/logo.png" alt="Tejovex AI" className="h-8 w-auto object-contain brightness-150 contrast-125" />
           </div>
           <button
             onClick={() => router.push('/home')}

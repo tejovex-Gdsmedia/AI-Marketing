@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Sparkles, Zap, ShieldCheck, TrendingUp } from 'lucide-react'
+import { ArrowRight, Zap, ShieldCheck, TrendingUp } from 'lucide-react'
 import MeshBackground from '@/components/ui/mesh-background'
 
 export default function LandingPage() {
@@ -18,10 +18,7 @@ export default function LandingPage() {
       {/* Glass header */}
       <header className="relative z-30 w-full px-6 md:px-16 py-5 flex items-center justify-between border-b border-white/[0.06] backdrop-blur-xl bg-[#030303]/40 sticky top-0">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-8 h-8 rounded-lg bg-white/[0.06] border border-white/[0.1] flex items-center justify-center group-hover:bg-white/[0.1] transition-colors">
-            <Sparkles className="w-4 h-4 text-neutral-100" />
-          </div>
-          <span className="text-base font-semibold tracking-tight text-white">Launchpad</span>
+          <img src="/logo.png" alt="Tejovex AI" className="h-8 w-auto object-contain" />
         </Link>
         <nav className="flex items-center gap-6 text-sm text-neutral-300">
           <Link href="#how" className="hover:text-white transition-colors hidden md:block">How it works</Link>

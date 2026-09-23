@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { deductWalletForVideo, calculateTotalCost, COMMISSION_RATE } from '@/lib/wallet/wallet-service'
+import { deductWalletForVideo, calculateTotalCost, COMMISSION_RATE } from '@/lib/wallet/wallet-service-supabase'
 
 const prisma = new PrismaClient()
 

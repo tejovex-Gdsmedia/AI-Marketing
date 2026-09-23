@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { deductWalletForVideo, calculateTotalCost } from '@/lib/wallet/wallet-service'
+import { deductWalletForVideo, calculateTotalCost } from '@/lib/wallet/wallet-service-supabase'
 
 export async function POST(request: NextRequest) {
   try {

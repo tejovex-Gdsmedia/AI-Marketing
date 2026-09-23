@@ -19,9 +19,11 @@ export async function POST(request: NextRequest) {
     let provider: string = model.provider;
 
     // ─── FAL.AI MODELS ───────────────────────────────────────────
+    
     if (model.provider === 'fal') {
-      const falKey = process.env.FAL_KEY;
-      if (!falKey) return NextResponse.json({ error: 'FAL_KEY not configured' }, { status: 500 });
+      // Use KLING_API_KEY for Kling models, otherwise FAL_KEY
+      const apiKey = process.env.FAL_KEY;
+      if (!apiKey) return NextResponse.json({ error: 'FAL_KEY not configured' }, { status: 500 });
 
       // Choose correct model ID based on input type
       let falModelId = model.providerModelId;
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
       const falRes = await fetch(`https://queue.fal.run/${falModelId}`, {
         method: 'POST',
         headers: {
-          Authorization: `Key ${falKey}`,
+          Authorization: `Key ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ input: falPayload }),

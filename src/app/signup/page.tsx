@@ -43,8 +43,7 @@ export default function SignupPage() {
     <div className="min-h-screen bg-[#0a0a0c] text-[#e8e6e3] flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <Link href="/" className="inline-flex items-center gap-2 mb-10 text-neutral-200 hover:text-white transition-colors">
-          <span className="w-6 h-6 rounded-md bg-neutral-800 border border-white/[0.06] flex items-center justify-center text-xs font-bold text-neutral-300">L</span>
-          <span className="text-sm font-medium tracking-tight">Launchpad</span>
+          <img src="/logo.png" alt="Tejovex AI" className="h-8 w-auto object-contain" />
         </Link>
 
         <h1 className="text-2xl font-semibold tracking-tight mb-2">Create account</h1>

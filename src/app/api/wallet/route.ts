@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOrCreateWallet, addWalletCredit, getWalletWithHistory } from '@/lib/wallet/wallet-service'
+import { getOrCreateWallet, addWalletCredit, getWalletWithHistory } from '@/lib/wallet/wallet-service-supabase'
 
 export async function GET(request: NextRequest) {
   try {

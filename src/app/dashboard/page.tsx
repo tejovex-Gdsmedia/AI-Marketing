@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview'
-import AnalyticsPage from '@/app/dashboard/analytics/page'
 import { WalletOverview } from '@/components/wallet/wallet-overview'
 import { useJoggVideoGeneration } from '@/hooks/use-jogg-video-generation'
 
@@ -15,7 +14,7 @@ const BORDER_SUBTLE = 'border-white/[0.06]'
 const getActiveStyle = (isActive: boolean) =>
   isActive
     ? 'text-white bg-white/[0.08] border border-white/[0.1]'
-    : 'text-neutral-500 hover:text-white hover:bg-white/[0.03]'
+    : 'text-neutral-400 hover:text-white hover:bg-white/[0.03]'
 
 interface ResearchResult {
   company_summary: string
@@ -77,6 +76,7 @@ type ActiveSection =
   | 'advanced_video_generator'
   | 'wallet'
   | 'platform_analytics'
+  | 'overview'
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
@@ -89,6 +89,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [polling, setPolling] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [promptVariations, setPromptVariations] = useState<string[]>([])
+const [selectedVariation, setSelectedVariation] = useState<number>(0)
 
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -205,12 +207,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-white flex">
+    <div className="min-h-screen text-white flex">
 
       {/* ── Sidebar ── */}
       <aside className={`
         fixed top-0 left-0 h-full z-40 flex flex-col
-        bg-[#111114] border-r border-white/[0.06]
+        bg-black/30 backdrop-blur-xl border-r border-white/[0.08] backdrop-blur-md
         transition-all duration-300
         ${sidebarOpen ? 'w-64' : 'w-16'}
       `}>
@@ -218,7 +220,7 @@ export default function DashboardPage() {
         {/* Home Button */}
         <div className="p-3 border-b border-white/[0.06]">
           <a
-            href="/"
+            href="/home"
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#8A94A6] hover:text-white hover:bg-white/[0.06] transition-colors"
           >
             <span className="text-lg">🏠</span>
@@ -228,18 +230,15 @@ export default function DashboardPage() {
 
         {/* Logo + Toggle */}
         <div className="flex items-center gap-3 px-4 py-4 border-b border-white/[0.06]">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black font-bold text-sm shrink-0">
-            L
-          </div>
+          <img src="/logo.png" alt="Tejovex AI" className="h-8 w-auto object-contain shrink-0" />
           {sidebarOpen && (
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-white truncate">Launchpad</div>
-              <div className="text-xs text-white/40 truncate">{companyName}</div>
+              <div className="text-xs text-white/70 truncate">{companyName}</div>
             </div>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="ml-auto text-white/40 hover:text-white transition-colors shrink-0"
+            className="ml-auto text-white/70 hover:text-white transition-colors shrink-0"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               {sidebarOpen
@@ -319,7 +318,7 @@ export default function DashboardPage() {
                       transition-colors
                       ${activeSection === section
                         ? 'text-amber-400 bg-amber-400/10 font-medium'
-                        : 'text-white/50 hover:text-white hover:bg-white/5'}
+                        : 'text-white/80 hover:text-white hover:bg-white/5'}
                     `}
                   >
                     <span className="text-sm shrink-0">{sectionIcons[section]}</span>
@@ -375,7 +374,7 @@ export default function DashboardPage() {
                       transition-colors
                       ${activeSection === section
                         ? 'text-amber-400 bg-amber-400/10 font-medium'
-                        : 'text-white/50 hover:text-white hover:bg-white/5'}
+                        : 'text-white/80 hover:text-white hover:bg-white/5'}
                     `}
                   >
                     <span className="text-sm shrink-0">{sectionIcons[section]}</span>
@@ -389,7 +388,7 @@ export default function DashboardPage() {
                     transition-colors
                     ${activeSection === 'advanced_video_generator'
                       ? 'text-amber-400 bg-amber-400/10 font-medium'
-                      : 'text-white/50 hover:text-white hover:bg-white/5'}
+                      : 'text-white/80 hover:text-white hover:bg-white/5'}
                   `}
                 >
                   <span className="text-sm shrink-0">🎬</span>
@@ -406,7 +405,7 @@ export default function DashboardPage() {
             onClick={pollResults}
             disabled={polling}
             className={`
-              flex items-center gap-2 text-xs text-white/50 hover:text-white transition-colors disabled:opacity-40
+              flex items-center gap-2 text-xs text-white/80 hover:text-white transition-colors disabled:opacity-40
               ${sidebarOpen ? 'w-full px-3 py-2 rounded-xl hover:bg-white/5' : 'justify-center w-full'}
             `}
           >
@@ -424,7 +423,7 @@ export default function DashboardPage() {
 
         {/* Processing Banner */}
         {!allModulesReady && !loading && (
-          <div className="bg-neutral-800/40 border-b border-white/[0.06] px-6 py-3 flex items-center gap-3">
+          <div className="bg-white/[0.03] backdrop-blur-md border-b border-white/[0.06] px-6 py-3 flex items-center gap-3">
             <div className="w-4 h-4 border-2 border-neutral-500 border-t-transparent rounded-full animate-spin shrink-0" />
             <p className="text-sm text-neutral-400">
               AI is analyzing your website and generating insights... Results will appear automatically.
@@ -433,17 +432,17 @@ export default function DashboardPage() {
         )}
 
         {/* Page Title */}
-        <div className="px-8 py-6 border-b border-white/[0.06] flex items-center justify-between">
+        <div className="px-8 py-6 border-b border-white/[0.06] flex items-center justify-between bg-black/10 backdrop-blur-sm">
           <div>
             <h1 className="text-lg font-semibold text-white">{sectionLabels[activeSection]}</h1>
-            <p className="text-xs text-white/40 mt-0.5">
+            <p className="text-xs text-white/70 mt-0.5">
               {contentSections.includes(activeSection)
                 ? `Generate ${activeSection === 'image_generation' ? 'images' : 'video concepts'} using AI — powered by your research insights`
                 : `AI-powered ${sectionLabels[activeSection].toLowerCase()} for ${companyName}`}
             </p>
           </div>
           <a
-            href="/"
+            href="/home"
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors text-sm font-medium"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -460,14 +459,19 @@ export default function DashboardPage() {
             <div className="flex items-center justify-center py-32">
               <div className="text-center">
                 <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-white/40 text-sm">Loading results...</p>
+                <p className="text-white/70 text-sm">Loading results...</p>
               </div>
             </div>
           ) : (
             <>
               {/* Dashboard Overview */}
               {activeSection === 'overview' && (
-                <AnalyticsPage />
+                <DashboardOverview
+                  companyName={companyName}
+                  onGenerateVideo={() => setActiveSection('advanced_video_generator')}
+                  onGenerateImage={() => setActiveSection('image_generation')}
+                  onViewAnalytics={() => setActiveSection('marketing_research')}
+                />
               )}
 
               {/* Wallet Section */}
@@ -537,7 +541,7 @@ function PendingView({ label }: { label: string }) {
           <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
         </div>
         <h3 className="text-white font-semibold mb-2">Generating {label}</h3>
-        <p className="text-white/40 text-sm leading-relaxed">
+        <p className="text-white/70 text-sm leading-relaxed">
           Our AI is analyzing your website and building insights. This usually takes 1-2 minutes.
         </p>
         <div className="mt-6 flex items-center justify-center gap-2">
@@ -554,19 +558,20 @@ function PendingView({ label }: { label: string }) {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-[#0A0A0B] border border-white/10 rounded-2xl p-6 mb-4 shadow hover:border-white/20 transition-all duration-300">
-      <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-4">{title}</h3>
+    <div className="bg-white/[0.04] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6 mb-4 shadow hover:border-white/20 transition-all duration-300">
+      <h3 className="text-xs font-bold text-white/80 uppercase tracking-widest mb-4">{title}</h3>
       {children}
     </div>
   )
 }
 
-function Tag({ text, color = 'default' }: { text: string; color?: 'default' | 'green' | 'red' | 'neutral' }) {
+function Tag({ text, color = 'default' }: { text: string; color?: 'default' | 'green' | 'red' | 'neutral' | 'amber' }) {
   const colors: Record<string, string> = {
     default: 'bg-white/5 text-white/70 border border-white/10',
     green: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
     red: 'bg-red-500/10 text-red-400 border border-red-500/20',
     neutral: 'bg-neutral-800 text-neutral-300 border border-neutral-700',
+    amber: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
   }
   return (
     <span className={`text-[11px] px-3 py-1 rounded-full font-medium ${colors[color] || colors.default}`}>
@@ -655,15 +660,15 @@ function ImageGenerationView({
           <p className="text-xs text-amber-400/70 font-medium mb-2 uppercase tracking-wider">Auto-loaded context</p>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-xs text-white/40 mb-1">Company</p>
+              <p className="text-xs text-white/70 mb-1">Company</p>
               <p className="text-sm text-white font-medium">{companyName}</p>
             </div>
             <div>
-              <p className="text-xs text-white/40 mb-1">Audience</p>
+              <p className="text-xs text-white/70 mb-1">Audience</p>
               <p className="text-sm text-white/70 truncate">{research.target_audience?.primary}</p>
             </div>
             <div>
-              <p className="text-xs text-white/40 mb-1">Brand Voice</p>
+              <p className="text-xs text-white/70 mb-1">Brand Voice</p>
               <p className="text-sm text-white/70 truncate">{content?.brand_voice?.split('.')[0] || 'Not loaded yet'}</p>
             </div>
           </div>
@@ -674,7 +679,7 @@ function ImageGenerationView({
         <div className="space-y-5">
           {/* Brief input */}
           <div>
-            <label className="text-xs text-white/50 font-medium mb-2 block">
+            <label className="text-xs text-white/80 font-medium mb-2 block">
               Describe what you want to create
             </label>
             <textarea
@@ -682,13 +687,13 @@ function ImageGenerationView({
               onChange={(e) => setBrief(e.target.value)}
               placeholder={`e.g. A professional LinkedIn banner showcasing AI video marketing services for Indian MSMEs, with a modern Mumbai cityscape background and bold typography`}
               rows={4}
-              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-amber-400/40 focus:outline-none resize-none"
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/60 focus:border-amber-400/40 focus:outline-none resize-none"
             />
           </div>
 
           {/* Style selector */}
           <div>
-            <label className="text-xs text-white/50 font-medium mb-2 block">Visual Style</label>
+            <label className="text-xs text-white/80 font-medium mb-2 block">Visual Style</label>
             <div className="grid grid-cols-4 gap-2">
               {styles.map(s => (
                 <button
@@ -703,7 +708,7 @@ function ImageGenerationView({
                   <p className={`text-xs font-medium ${style === s.value ? 'text-amber-400' : 'text-white'}`}>
                     {s.label}
                   </p>
-                  <p className="text-xs text-white/40 mt-0.5">{s.desc}</p>
+                  <p className="text-xs text-white/70 mt-0.5">{s.desc}</p>
                 </button>
               ))}
             </div>
@@ -711,7 +716,7 @@ function ImageGenerationView({
 
           {/* Format selector */}
           <div>
-            <label className="text-xs text-white/50 font-medium mb-2 block">Image Format</label>
+            <label className="text-xs text-white/80 font-medium mb-2 block">Image Format</label>
             <div className="grid grid-cols-4 gap-2">
               {formats.map(f => (
                 <button
@@ -726,7 +731,7 @@ function ImageGenerationView({
                   <p className={`text-xs font-medium ${format === f.value ? 'text-amber-400' : 'text-white'}`}>
                     {f.label}
                   </p>
-                  <p className="text-xs text-white/40 mt-0.5">{f.size}</p>
+                  <p className="text-xs text-white/70 mt-0.5">{f.size}</p>
                 </button>
               ))}
             </div>
@@ -865,15 +870,15 @@ function VideoGenerationView({
           <p className="text-xs text-amber-400/70 font-medium mb-2 uppercase tracking-wider">Auto-loaded context</p>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-xs text-white/40 mb-1">Company</p>
+              <p className="text-xs text-white/70 mb-1">Company</p>
               <p className="text-sm text-white font-medium">{companyName}</p>
             </div>
             <div>
-              <p className="text-xs text-white/40 mb-1">Audience</p>
+              <p className="text-xs text-white/70 mb-1">Audience</p>
               <p className="text-sm text-white/70 truncate">{research.target_audience?.primary}</p>
             </div>
             <div>
-              <p className="text-xs text-white/40 mb-1">Pain Points</p>
+              <p className="text-xs text-white/70 mb-1">Pain Points</p>
               <p className="text-sm text-white/70 truncate">{research.target_audience?.pain_points?.[0]}</p>
             </div>
           </div>
@@ -884,7 +889,7 @@ function VideoGenerationView({
         <div className="space-y-5">
           {/* Brief input */}
           <div>
-            <label className="text-xs text-white/50 font-medium mb-2 block">
+            <label className="text-xs text-white/80 font-medium mb-2 block">
               What is this video about?
             </label>
             <textarea
@@ -892,13 +897,13 @@ function VideoGenerationView({
               onChange={(e) => setBrief(e.target.value)}
               placeholder={`e.g. Show how GDS Media transforms a small Indian business using AI video marketing — before and after transformation, emotional storytelling, end with a CTA to book a free strategy call`}
               rows={4}
-              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-amber-400/40 focus:outline-none resize-none"
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/60 focus:border-amber-400/40 focus:outline-none resize-none"
             />
           </div>
 
           {/* Video type selector */}
           <div>
-            <label className="text-xs text-white/50 font-medium mb-2 block">Video Format</label>
+            <label className="text-xs text-white/80 font-medium mb-2 block">Video Format</label>
             <div className="grid grid-cols-4 gap-2">
               {videoTypes.map(v => (
                 <button
@@ -913,7 +918,7 @@ function VideoGenerationView({
                   <p className={`text-xs font-medium ${videoType === v.value ? 'text-amber-400' : 'text-white'}`}>
                     {v.label}
                   </p>
-                  <p className="text-xs text-white/40 mt-0.5">{v.desc}</p>
+                  <p className="text-xs text-white/70 mt-0.5">{v.desc}</p>
                 </button>
               ))}
             </div>
@@ -981,7 +986,7 @@ function ResearchView({ data }: { data: ResearchResult }) {
       <Card title="Company Summary">
         <p className="text-white/80 text-sm leading-relaxed">{data.company_summary}</p>
         <div className="mt-4 p-4 rounded-xl bg-white/[0.03] border border-white/5">
-          <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Value Proposition</p>
+          <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest mb-1">Value Proposition</p>
           <p className="text-sm text-white font-semibold">{data.value_proposition}</p>
         </div>
       </Card>
@@ -989,15 +994,15 @@ function ResearchView({ data }: { data: ResearchResult }) {
       <Card title="Target Audience">
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
-            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Primary</p>
+            <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest mb-1">Primary</p>
             <p className="text-sm text-white font-medium">{data.target_audience.primary}</p>
           </div>
           <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
-            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Secondary</p>
+            <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest mb-1">Secondary</p>
             <p className="text-sm text-white font-medium">{data.target_audience.secondary}</p>
           </div>
         </div>
-        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-2">Pain Points</p>
+        <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest mb-2">Pain Points</p>
         <div className="flex flex-wrap gap-2">
           {data.target_audience.pain_points.map((p, i) => <Tag key={i} text={p} color="red" />)}
         </div>
@@ -1007,13 +1012,13 @@ function ResearchView({ data }: { data: ResearchResult }) {
         <p className="text-sm text-white/70 mb-4 leading-relaxed">{data.competitor_analysis.market_position}</p>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-2">Likely Competitors</p>
+            <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest mb-2">Likely Competitors</p>
             <div className="flex flex-wrap gap-2">
               {data.competitor_analysis.likely_competitors.map((c, i) => <Tag key={i} text={c} color="neutral" />)}
             </div>
           </div>
           <div>
-            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-2">Competitive Advantages</p>
+            <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest mb-2">Competitive Advantages</p>
             <div className="flex flex-wrap gap-2">
               {data.competitor_analysis.competitive_advantages.map((a, i) => <Tag key={i} text={a} color="green" />)}
             </div>
@@ -1031,7 +1036,7 @@ function ResearchView({ data }: { data: ResearchResult }) {
           <ul className="space-y-2">
             {data.content_gaps.map((g, i) => (
               <li key={i} className="text-sm text-white/70 flex gap-2">
-                <span className="text-white/40 mt-0.5">•</span> {g}
+                <span className="text-white/70 mt-0.5">•</span> {g}
               </li>
             ))}
           </ul>
@@ -1075,7 +1080,7 @@ function ContentView({ data }: { data: ContentResult }) {
               <Tag text={b.target_keyword} color="neutral" />
               <ul className="mt-3 space-y-1.5">
                 {b.outline.map((o, j) => (
-                  <li key={j} className="text-xs text-white/50 flex gap-2"><span className="text-white/20">•</span>{o}</li>
+                  <li key={j} className="text-xs text-white/80 flex gap-2"><span className="text-white/20">•</span>{o}</li>
                 ))}
               </ul>
             </div>
@@ -1087,7 +1092,7 @@ function ContentView({ data }: { data: ContentResult }) {
         <div className="space-y-3">
           {Object.entries(data.social_captions).map(([platform, caption]) => (
             <div key={platform} className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
-              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">{platform}</p>
+              <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest mb-1">{platform}</p>
               <p className="text-sm text-white/70 italic">"{caption}"</p>
             </div>
           ))}
@@ -1103,7 +1108,7 @@ function ContentView({ data }: { data: ContentResult }) {
               </div>
               <div>
                 <p className="text-sm font-semibold text-white">{week.theme}</p>
-                <p className="text-xs text-white/50 mt-0.5">{week.content_type} — {week.topic}</p>
+                <p className="text-xs text-white/80 mt-0.5">{week.content_type} — {week.topic}</p>
               </div>
             </div>
           ))}
@@ -1124,7 +1129,7 @@ function AdsView({ data }: { data: AdsResult }) {
             <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.03]">
               <div>
                 <p className="text-sm font-medium text-white">{p.platform}</p>
-                <p className="text-xs text-white/40 mt-0.5">{p.reason}</p>
+                <p className="text-xs text-white/70 mt-0.5">{p.reason}</p>
               </div>
               <Tag text={p.budget_allocation} color="green" />
             </div>
@@ -1137,7 +1142,7 @@ function AdsView({ data }: { data: AdsResult }) {
             <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
               <Tag text={ad.type} color="neutral" />
               <p className="text-sm font-medium text-white mt-2">{ad.headline}</p>
-              <p className="text-xs text-white/50 mt-1">{ad.description}</p>
+              <p className="text-xs text-white/80 mt-1">{ad.description}</p>
               <p className="text-xs text-neutral-300 mt-2">CTA: {ad.cta}</p>
             </div>
           ))}
@@ -1146,38 +1151,38 @@ function AdsView({ data }: { data: AdsResult }) {
       <Card title="Budget Recommendation">
         <div className="grid grid-cols-3 gap-4">
           <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] text-center">
-            <p className="text-xs text-white/40 mb-1">Minimum</p>
+            <p className="text-xs text-white/70 mb-1">Minimum</p>
             <p className="text-lg font-bold text-white">{data.budget_recommendation.monthly_minimum}</p>
-            <p className="text-xs text-white/30">per month</p>
+            <p className="text-xs text-white/60">per month</p>
           </div>
           <div className="p-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-center">
-            <p className="text-xs text-white/50 mb-1">Recommended</p>
+            <p className="text-xs text-white/80 mb-1">Recommended</p>
             <p className="text-lg font-bold text-white">{data.budget_recommendation.monthly_recommended}</p>
-            <p className="text-xs text-white/40">per month</p>
+            <p className="text-xs text-white/70">per month</p>
           </div>
           <div className="p-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-center">
-            <p className="text-xs text-white/50 mb-1">Expected ROAS</p>
+            <p className="text-xs text-white/80 mb-1">Expected ROAS</p>
             <p className="text-lg font-bold text-white">{data.budget_recommendation.expected_roas}</p>
-            <p className="text-xs text-white/40">return</p>
+            <p className="text-xs text-white/70">return</p>
           </div>
         </div>
       </Card>
       <Card title="Keywords">
         <div className="space-y-4">
           <div>
-            <p className="text-xs text-white/40 mb-2">High Intent</p>
+            <p className="text-xs text-white/70 mb-2">High Intent</p>
             <div className="flex flex-wrap gap-2">
               {data.keywords.high_intent.map((k, i) => <Tag key={i} text={k} color="green" />)}
             </div>
           </div>
           <div>
-            <p className="text-xs text-white/40 mb-2">Broad Match</p>
+            <p className="text-xs text-white/70 mb-2">Broad Match</p>
             <div className="flex flex-wrap gap-2">
               {data.keywords.broad_match.map((k, i) => <Tag key={i} text={k} />)}
             </div>
           </div>
           <div>
-            <p className="text-xs text-white/40 mb-2">Negative Keywords</p>
+            <p className="text-xs text-white/70 mb-2">Negative Keywords</p>
             <div className="flex flex-wrap gap-2">
               {data.keywords.negative_keywords.map((k, i) => <Tag key={i} text={k} />)}
             </div>
@@ -1201,21 +1206,21 @@ function SeoView({ data }: { data: SeoResult }) {
         <Card title="SEO Score vs Competitors">
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 rounded-xl bg-white/[0.05] border border-white/[0.1] text-center">
-              <p className="text-xs text-white/50 mb-1">Your Score</p>
+              <p className="text-xs text-white/80 mb-1">Your Score</p>
               <p className="text-3xl font-bold text-white">{comparison.your_seo_score}</p>
-              <p className="text-xs text-white/30 mt-1">out of 100</p>
+              <p className="text-xs text-white/60 mt-1">out of 100</p>
             </div>
             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] text-center">
-              <p className="text-xs text-white/40 mb-1">Avg Competitor</p>
+              <p className="text-xs text-white/70 mb-1">Avg Competitor</p>
               <p className="text-3xl font-bold text-white">{comparison.avg_competitor_score}</p>
-              <p className="text-xs text-white/30 mt-1">out of 100</p>
+              <p className="text-xs text-white/60 mt-1">out of 100</p>
             </div>
             <div className={`p-4 rounded-xl border text-center ${comparison.score_gap > 0 ? 'bg-red-500/5 border-red-500/10' : 'bg-emerald-500/5 border-emerald-500/10'}`}>
-              <p className="text-xs text-white/50 mb-1">Gap</p>
+              <p className="text-xs text-white/80 mb-1">Gap</p>
               <p className={`text-3xl font-bold ${comparison.score_gap > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                 {comparison.score_gap > 0 ? `-${comparison.score_gap}` : `+${Math.abs(comparison.score_gap)}`}
               </p>
-              <p className="text-xs text-white/30 mt-1">
+              <p className="text-xs text-white/60 mt-1">
                 {comparison.score_gap > 0 ? 'behind competitors' : 'ahead of competitors'}
               </p>
             </div>
@@ -1236,11 +1241,11 @@ function SeoView({ data }: { data: SeoResult }) {
                     <a href={comp.url} target="_blank" rel="noopener noreferrer" className="text-sm text-amber-400 hover:underline">
                       {domain}
                     </a>
-                    <p className="text-xs text-white/30">{comp.pages_scraped} pages scraped</p>
+                    <p className="text-xs text-white/60">{comp.pages_scraped} pages scraped</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/40">SEO Score</span>
+                  <span className="text-xs text-white/70">SEO Score</span>
                   <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${comp.seo_score > 70 ? 'bg-green-400/10 text-green-400' : comp.seo_score > 50 ? 'bg-amber-400/10 text-amber-400' : 'bg-red-400/10 text-red-400'}`}>
                     {comp.seo_score}
                   </span>
@@ -1272,10 +1277,10 @@ function SeoView({ data }: { data: SeoResult }) {
                 </div>
                 {item.competitors_doing_it?.length > 0 && (
                   <div className="mt-2">
-                    <p className="text-xs text-white/30 mb-1">Competitors doing this better:</p>
+                    <p className="text-xs text-white/60 mb-1">Competitors doing this better:</p>
                     <div className="flex flex-wrap gap-1">
                       {(item.competitors_doing_it ?? []).map((comp, j) => (
-                        <span key={j} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/50 border border-white/10">{comp}</span>
+                        <span key={j} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/80 border border-white/10">{comp}</span>
                       ))}
                     </div>
                   </div>
@@ -1293,7 +1298,7 @@ function SeoView({ data }: { data: SeoResult }) {
           </div>
           <div>
             <p className="text-sm text-white/70">Overall SEO health score</p>
-            <p className="text-xs text-white/30 mt-1">Calculated from real on-page factors. Updates only when you rescan your website.</p>
+            <p className="text-xs text-white/60 mt-1">Calculated from real on-page factors. Updates only when you rescan your website.</p>
           </div>
         </div>
       </Card>
@@ -1301,7 +1306,7 @@ function SeoView({ data }: { data: SeoResult }) {
       <Card title="Quick Wins">
         <div className="space-y-2">
           {(!data?.quick_wins || data.quick_wins.length === 0) ? (
-            <p className="text-white/50 text-sm">No quick wins available</p>
+            <p className="text-white/80 text-sm">No quick wins available</p>
           ) : (
             data.quick_wins.map((w: string, i: number) => (
               <div key={i} className="flex gap-3 p-3 rounded-xl bg-green-400/5 border border-green-400/10">
@@ -1321,7 +1326,7 @@ function SeoView({ data }: { data: SeoResult }) {
                 <p className="text-sm font-medium text-white">{t.issue}</p>
                 <Tag text={t.severity} color={t.severity === 'high' ? 'red' : t.severity === 'medium' ? 'amber' : 'default'} />
               </div>
-              <p className="text-xs text-white/40">Fix: {t.fix}</p>
+              <p className="text-xs text-white/70">Fix: {t.fix}</p>
             </div>
           ))}
         </div>
@@ -1348,7 +1353,7 @@ function SeoView({ data }: { data: SeoResult }) {
               <p className="text-sm font-medium text-amber-400 mb-2">Month {m.month} — {m.focus}</p>
               <ul className="space-y-1">
                 {(m.tasks ?? []).map((t, i) => (
-                  <li key={i} className="text-xs text-white/50 flex gap-2"><span>•</span>{t}</li>
+                  <li key={i} className="text-xs text-white/80 flex gap-2"><span>•</span>{t}</li>
                 ))}
               </ul>
             </div>
@@ -1492,6 +1497,7 @@ function AdvancedVideoGeneratorView({
   // Fetch avatars when Jogg AI is selected
   useEffect(() => {
     if (selectedModel?.id === 'jogg-ai') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingAvatars(true)
       fetch('/api/jogg-avatars')
         .then(res => {
@@ -1506,7 +1512,7 @@ function AdvancedVideoGeneratorView({
           console.log('data.data?.avatars:', data.data?.avatars)
 
           // Avatar API returns { data: { avatars: [...] } }
-          let avatarList = null
+          let avatarList: Array<{ avatar_id: number; name: string; cover_url: string }> | null = null
 
           if (data.data?.avatars && Array.isArray(data.data.avatars)) {
             avatarList = data.data.avatars
@@ -1541,40 +1547,51 @@ function AdvancedVideoGeneratorView({
     }
   }, [selectedModel?.id, selectedAvatarId])
 
-  async function handleGenerateConcept() {
-    if (!conceptInput.trim()) return
-    setIsGeneratingPrompt(true)
-    try {
-      const res = await fetch('/api/generate-video-concept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          company_name: companyName,
-          brief: conceptInput,
-          video_type: 'brand_ad',
-          research_context: {
-            audience: research?.target_audience?.primary || '',
-            pain_points: research?.target_audience?.pain_points || [],
-            value_proposition: research?.value_proposition || '',
-          },
-          content_context: {
-            brand_voice: content?.brand_voice || '',
-            content_pillars: content?.content_pillars || [],
-          },
-        }),
-      })
-      const data = await res.json()
-      if (data.result?.script) {
-        setPrompt(data.result.script)
-      } else if (data.result?.prompt) {
-        setPrompt(data.result.prompt)
-      }
-    } catch (err) {
-      console.error('Failed to generate prompt:', err)
-    } finally {
-      setIsGeneratingPrompt(false)
+// STATE — ye add karo top pe (near other useState):
+const [promptVariations, setPromptVariations] = useState<string[]>([])
+const [selectedVariation, setSelectedVariation] = useState<number>(0)
+
+// FUNCTION — replace existing handleGenerateConcept:
+async function handleGenerateConcept() {
+  if (!conceptInput.trim()) return
+  setIsGeneratingPrompt(true)
+  setPromptVariations([])
+  try {
+    const res = await fetch('/api/generate-video-concept', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        company_name: companyName,
+        brief: conceptInput,
+        video_type: 'brand_ad',
+        model_id: selectedModel?.id || 'default',  // ← model pass karo
+        research_context: {
+          audience: research?.target_audience?.primary || '',
+          pain_points: research?.target_audience?.pain_points || [],
+          value_proposition: research?.value_proposition || '',
+        },
+        content_context: {
+          brand_voice: content?.brand_voice || '',
+          content_pillars: content?.content_pillars || [],
+        },
+      }),
+    })
+    const data = await res.json()
+
+    // 3 variations set karo
+    if (data.result?.video_prompts?.length > 0) {
+      setPromptVariations(data.result.video_prompts)
+      setPrompt(data.result.video_prompts[0]) // first auto-select
+      setSelectedVariation(0)
+    } else if (data.result?.script) {
+      setPrompt(data.result.script)
     }
+  } catch (err) {
+    console.error('Failed to generate prompt:', err)
+  } finally {
+    setIsGeneratingPrompt(false)
   }
+}
 
   // Use Jogg video generation hook
   const {
@@ -1651,8 +1668,8 @@ function AdvancedVideoGeneratorView({
   }
 
   // Enhanced professional return
-  return (
-    <div className="bg-[#0A0A0B]/80 rounded-[2rem] border border-white/[0.06] p-6 lg:p-8 shadow-[0_0_60px_-20px_rgba(245,158,11,0.06)] backdrop-blur-xl">
+return (
+    <div className="bg-white/[0.03] rounded-[2rem] border border-white/[0.08] p-6 lg:p-8 shadow-[0_0_60px_-20px_rgba(245,158,11,0.06)] backdrop-blur-xl">
       <div className="flex items-end justify-between mb-8">
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight text-white">Advanced Generator</h2>
@@ -1670,15 +1687,15 @@ function AdvancedVideoGeneratorView({
           <p className="text-xs text-amber-400/70 font-medium mb-2 uppercase tracking-wider">Auto-loaded context</p>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-xs text-white/40 mb-1">Company</p>
+              <p className="text-xs text-white/70 mb-1">Company</p>
               <p className="text-sm text-white font-medium">{companyName}</p>
             </div>
             <div>
-              <p className="text-xs text-white/40 mb-1">Audience</p>
+              <p className="text-xs text-white/70 mb-1">Audience</p>
               <p className="text-sm text-white/70 truncate">{research.target_audience?.primary}</p>
             </div>
             <div>
-              <p className="text-xs text-white/40 mb-1">Pain Points</p>
+              <p className="text-xs text-white/70 mb-1">Pain Points</p>
               <p className="text-sm text-white/70 truncate">{research.target_audience?.pain_points?.[0]}</p>
             </div>
           </div>
@@ -1699,7 +1716,7 @@ function AdvancedVideoGeneratorView({
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               activeFilter === f.value
                 ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
-                : 'text-white/50 hover:text-white bg-white/5 border border-white/10'
+                : 'text-white/80 hover:text-white bg-white/5 border border-white/10'
             }`}
           >
             {f.label}
@@ -1730,13 +1747,13 @@ function AdvancedVideoGeneratorView({
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-white/40 mt-0.5">{model.company}</p>
-                  <p className="text-[11px] text-white/30 mt-1 leading-relaxed">{model.description}</p>
+                  <p className="text-[11px] text-white/70 mt-0.5">{model.company}</p>
+                  <p className="text-[11px] text-white/60 mt-1 leading-relaxed">{model.description}</p>
                 </div>
               </div>
               <div className="flex gap-1 mt-2">
                 {model.types.map((t) => (
-                  <span key={t} className="text-[10px] bg-white/5 text-white/40 px-1.5 py-0.5 rounded">
+                  <span key={t} className="text-[10px] bg-white/5 text-white/70 px-1.5 py-0.5 rounded">
                     {t === 'avatar' ? 'Avatar' : t === 'text_to_video' ? 'T2V' : 'I2V'}
                   </span>
                 ))}
@@ -1748,7 +1765,7 @@ function AdvancedVideoGeneratorView({
         {/* Generation Form */}
         <div className="col-span-2">
           {!selectedModel ? (
-            <div className="flex items-center justify-center h-96 text-white/40">
+            <div className="flex items-center justify-center h-96 text-white/70">
               Select a model to get started
             </div>
           ) : (
@@ -1756,7 +1773,7 @@ function AdvancedVideoGeneratorView({
               {/* Selected model info */}
               <div className="p-4 bg-white/[0.02] border border-white/10 rounded-lg">
                 <h3 className="font-semibold text-sm text-white">{selectedModel.name}</h3>
-                <p className="text-xs text-white/40 mt-1">
+                <p className="text-xs text-white/70 mt-1">
                   {selectedModel.company} · {selectedModel.resolution} · Max {selectedModel.maxDuration}s
                 </p>
               </div>
@@ -1766,7 +1783,7 @@ function AdvancedVideoGeneratorView({
                 <div>
                   <label className="block text-xs font-medium text-white/60 mb-2">Select Avatar</label>
                   {loadingAvatars ? (
-                    <div className="flex items-center justify-center py-8 text-white/40">
+                    <div className="flex items-center justify-center py-8 text-white/70">
                       <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mr-2" />
                       Loading avatars...
                     </div>
@@ -1807,33 +1824,66 @@ function AdvancedVideoGeneratorView({
                 <label className="block text-xs font-medium text-white/60 mb-2">
                   {selectedModel.types.includes('avatar') ? 'Script' : 'Prompt'}
                 </label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={conceptInput}
-                    onChange={(e) => setConceptInput(e.target.value)}
-                    placeholder="Describe your video idea..."
-                    className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30"
-                  />
-                  <button
-                    onClick={handleGenerateConcept}
-                    disabled={isGeneratingPrompt || !conceptInput.trim()}
-                    className="px-3 py-2 bg-white/5 border border-white/10 text-xs text-white/60 hover:text-white rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {isGeneratingPrompt ? '...' : 'Auto-Gen'}
-                  </button>
-                </div>
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  rows={3}
-                  placeholder={
-                    selectedModel.types.includes('avatar')
-                      ? 'Write the script your avatar will speak...'
-                      : 'Describe the video you want to generate...'
-                  }
-                  className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30 resize-none"
-                />
+<div className="flex gap-2 mb-2">
+  <input
+    type="text"
+    value={conceptInput}
+    onChange={(e) => setConceptInput(e.target.value)}
+    placeholder="Describe your video idea briefly..."
+    className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30"
+  />
+  <button
+    onClick={handleGenerateConcept}
+    disabled={isGeneratingPrompt || !conceptInput.trim()}
+    className="px-3 py-2 bg-amber-400/10 border border-amber-400/20 text-xs text-amber-400 hover:bg-amber-400/20 rounded-lg transition-colors disabled:opacity-50 min-w-[80px]"
+  >
+    {isGeneratingPrompt ? (
+      <span className="flex items-center gap-1">
+        <div className="w-3 h-3 border border-amber-400 border-t-transparent rounded-full animate-spin" />
+        Gen...
+      </span>
+    ) : '✨ Auto-Gen'}
+  </button>
+</div>
+
+{promptVariations.length > 0 && (
+  <div className="mb-2 space-y-1.5">
+    <p className="text-[10px] text-white/40 uppercase tracking-wider font-medium">
+      Choose a variation:
+    </p>
+    {promptVariations.map((variation, i) => (
+      <button
+        key={i}
+        onClick={() => {
+          setPrompt(variation)
+          setSelectedVariation(i)
+        }}
+        className={`w-full text-left p-2.5 rounded-lg border text-xs transition-all ${
+          selectedVariation === i
+            ? 'border-amber-400/40 bg-amber-400/10 text-white'
+            : 'border-white/[0.06] bg-white/[0.02] text-white/50 hover:border-white/20 hover:text-white/80'
+        }`}
+      >
+        <span className={`font-medium mr-2 ${selectedVariation === i ? 'text-amber-400' : 'text-white/30'}`}>
+          V{i + 1}
+        </span>
+        {variation.slice(0, 100)}...
+      </button>
+    ))}
+  </div>
+)}
+
+<textarea
+  value={prompt}
+  onChange={(e) => setPrompt(e.target.value)}
+  rows={3}
+  placeholder={
+    selectedModel.types.includes('avatar')
+      ? 'Write the script your avatar will speak...'
+      : 'Describe the video you want to generate...'
+  }
+  className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30 resize-none"
+/>
               </div>
 
               {/* Image Upload */}
@@ -1859,7 +1909,7 @@ function AdvancedVideoGeneratorView({
                             <button className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1" onClick={(e) => { e.stopPropagation(); setImageUrl('') }}>✕</button>
                         </div>
                       ) : (
-                        <div className="text-center text-xs text-white/40">
+                        <div className="text-center text-xs text-white/70">
                           <p>Drag & drop image here or click to select</p>
                         </div>
                       )}
@@ -1896,7 +1946,7 @@ function AdvancedVideoGeneratorView({
                         max={selectedModel.maxDuration}
                         className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-400/30"
                       />
-                      <span className="text-xs text-white/40 px-2 py-2">Max: {selectedModel.maxDuration}s</span>
+                      <span className="text-xs text-white/70 px-2 py-2">Max: {selectedModel.maxDuration}s</span>
                     </div>
                   </div>
                   <div>
@@ -1923,10 +1973,10 @@ function AdvancedVideoGeneratorView({
               {/* Cost Preview */}
               <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-white/40">Estimated cost</p>
+                  <p className="text-xs text-white/70">Estimated cost</p>
                   <p className="text-sm font-bold text-white mt-0.5">
                     ₹{estimatedINR}
-                    <span className="text-xs font-normal text-white/40 ml-1">(${estimatedUSD})</span>
+                    <span className="text-xs font-normal text-white/70 ml-1">(${estimatedUSD})</span>
                   </p>
                 </div>
               </div>
@@ -1980,14 +2030,14 @@ function AdvancedVideoGeneratorView({
               {(status === 'completed' && videoUrl) || (joggStatus === 'completed' && joggVideoUrl) ? (
                 <div className="space-y-2">
                   <video
-                    src={joggStatus === 'completed' ? joggVideoUrl : videoUrl}
+                    src={(joggStatus === 'completed' ? joggVideoUrl : videoUrl) ?? undefined}
                     controls
                     autoPlay
                     className="w-full rounded-lg border border-white/10"
                   />
                   <div className="flex gap-2">
                     <a
-                      href={joggStatus === 'completed' ? joggVideoUrl : videoUrl}
+                      href={(joggStatus === 'completed' ? joggVideoUrl : videoUrl) ?? undefined}
                       download
                       target="_blank"
                       rel="noopener noreferrer"
