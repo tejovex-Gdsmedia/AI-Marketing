@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { VIDEO_MODELS } from '../../../lib/video/models';
+import { fal } from '@fal-ai/client';
+
+fal.config({ credentials: process.env.FAL_KEY! });
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,47 +20,31 @@ export async function POST(request: NextRequest) {
 
     let jobId: string;
     let provider: string = model.provider;
+    let falModelId: string = model.providerModelId;
 
-    // ─── FAL.AI MODELS ───────────────────────────────────────────
+    // ─── FAL.AI MODELS ───────────────────────────────────────
     if (model.provider === 'fal') {
-      const falKey = process.env.FAL_KEY;
-      if (!falKey) return NextResponse.json({ error: 'FAL_KEY not configured' }, { status: 500 });
-
-      // Choose correct model ID based on input type
-      let falModelId = model.providerModelId;
-      if (imageUrl && modelId === 'kling_3') {
-        falModelId = 'fal-ai/kling-video/v2.1/standard/image-to-video';
-      }
-      if (imageUrl && modelId === 'pika_2_2') {
-        falModelId = 'fal-ai/pika/v2.2/image-to-video';
+      // Adjust model ID for image-to-video if imageUrl provided
+      if (imageUrl) {
+        if (modelId === 'kling-3.0') {
+          falModelId = 'fal-ai/kling-video/v2.1/standard/image-to-video';
+        } else if (modelId === 'pika-2.2') {
+          falModelId = 'fal-ai/pika/v2.2/image-to-video';
+        }
       }
 
-      const falPayload: Record<string, unknown> = {
+      const input: Record<string, unknown> = {
         prompt,
-        duration: String(duration || 5),
+        duration: duration || 5,
         aspect_ratio: aspectRatio || '16:9',
       };
-      if (imageUrl) falPayload.image_url = imageUrl;
+      if (imageUrl) input.image_url = imageUrl;
 
-      const falRes = await fetch(`https://queue.fal.run/${falModelId}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Key ${falKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ input: falPayload }),
-      });
-
-      if (!falRes.ok) {
-        const err = await falRes.text();
-        return NextResponse.json({ error: `fal.ai error: ${err}` }, { status: 500 });
-      }
-
-      const falData = await falRes.json();
-      jobId = falData.request_id;
+      const result = await fal.queue.submit(falModelId, { input });
+      jobId = result.request_id;
     }
 
-    // ─── GOOGLE VEO 3 ────────────────────────────────────────────
+    // ─── GOOGLE VEO 3 ────────────────────────────────────────
     else if (model.provider === 'gemini') {
       const geminiKey = process.env.GEMINI_API_KEY;
       if (!geminiKey) return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 });
@@ -83,10 +70,10 @@ export async function POST(request: NextRequest) {
       }
 
       const geminiData = await geminiRes.json();
-      jobId = geminiData.name; // operation name acts as job ID
+      jobId = geminiData.name;
     }
 
-    // ─── RUNWAY GEN-4 ────────────────────────────────────────────
+    // ─── RUNWAY GEN-4 ────────────────────────────────────────
     else if (model.provider === 'runway') {
       const runwayKey = process.env.RUNWAY_API_KEY;
       if (!runwayKey) return NextResponse.json({ error: 'RUNWAY_API_KEY not configured' }, { status: 500 });
@@ -118,13 +105,12 @@ export async function POST(request: NextRequest) {
       jobId = runwayData.id;
     }
 
-    // ─── JOGG AI ─────────────────────────────────────────────────
+    // ─── JOGG AI ───────────────────────────────────────────
     else if (model.provider === 'jogg') {
       const joggKey = process.env.JOGG_AI_API_KEY;
       if (!joggKey) return NextResponse.json({ error: 'JOGG_AI_API_KEY not configured' }, { status: 500 });
 
       const { avatar_id, voice_id } = body;
-
       if (!avatar_id) {
         return NextResponse.json({ error: 'avatar_id is required for Jogg AI' }, { status: 400 });
       }
@@ -140,43 +126,30 @@ export async function POST(request: NextRequest) {
         script: prompt,
         aspect_ratio: aspectRatioMap[aspectRatio || '16:9'] || 1,
       };
-
-      if (voice_id) {
-        (joggPayload as Record<string, unknown>).voice_id = voice_id;
-      }
+      if (voice_id) (joggPayload as Record<string, unknown>).voice_id = voice_id;
 
       const joggRes = await fetch('https://api.jogg.ai/v1/create', {
         method: 'POST',
-        headers: {
-          'x-api-key': joggKey,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'x-api-key': joggKey, 'Content-Type': 'application/json' },
         body: JSON.stringify(joggPayload),
       });
 
       if (!joggRes.ok) {
         const errText = await joggRes.text();
         console.error(`Jogg AI error: ${joggRes.status} - ${errText}`);
-        return NextResponse.json({
-          error: `Jogg AI error: ${joggRes.status} - ${errText}`
-        }, { status: 500 });
+        return NextResponse.json({ error: `Jogg AI error: ${joggRes.status} - ${errText}` }, { status: 500 });
       }
 
       const joggData = await joggRes.json();
       jobId = joggData.data?.video_id;
-
       if (!jobId) {
-        return NextResponse.json({
-          error: 'No video_id returned from Jogg AI'
-        }, { status: 500 });
+        return NextResponse.json({ error: 'No video_id returned from Jogg AI' }, { status: 500 });
       }
-    }
-
-    else {
+    } else {
       return NextResponse.json({ error: 'Provider not yet implemented' }, { status: 501 });
     }
 
-    // ─── LOG TO SUPABASE ─────────────────────────────────────────
+    // ─── LOG TO SUPABASE ────────────────────────────────────
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && userId) {
       await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/video_generations`, {
         method: 'POST',
@@ -197,7 +170,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, jobId: jobId!, provider });
+    return NextResponse.json({ success: true, jobId, falModelId, provider });
   } catch (error) {
     console.error('Video generation error:', error);
     return NextResponse.json({ error: 'Video generation failed. Please try again.' }, { status: 500 });
