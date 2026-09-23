@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { VIDEO_MODELS } from '../../../lib/video/models';
+import { fal } from '@fal-ai/client';
+
+fal.config({ credentials: process.env.FAL_KEY! });
+
+// ─── FAL.AI IMAGE-TO-VIDEO MODEL MAP ─────────────────────────
+// Jab imageUrl aaye toh kaunsa model use karna hai
+const FAL_IMAGE_TO_VIDEO_MAP: Record<string, string> = {
+  kling_3:    'fal-ai/kling-video/v2.1/standard/image-to-video',
+  pika_2_2:   'fal-ai/pika/v2.2/image-to-video',
+  wan_pro:    'fal-ai/wan-pro/image-to-video',
+  ltx_video:  'fal-ai/ltx-video/image-to-video',
+  hunyuan:    'fal-ai/hunyuan-video/image-to-video',
+  // Naya model add karna ho toh yahan add karo
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,37 +31,32 @@ export async function POST(request: NextRequest) {
 
     let jobId: string;
     let provider: string = model.provider;
+    let falModelId: string = model.providerModelId; // ← sirf ek baar declare
 
     // ─── FAL.AI MODELS ───────────────────────────────────────────
-    
     if (model.provider === 'fal') {
-      // Use KLING_API_KEY for Kling models, otherwise FAL_KEY
-      const apiKey = process.env.FAL_KEY;
-      if (!apiKey) return NextResponse.json({ error: 'FAL_KEY not configured' }, { status: 500 });
+      const falKey = process.env.FAL_KEY;
+      if (!falKey) return NextResponse.json({ error: 'FAL_KEY not configured' }, { status: 500 });
 
-      // Choose correct model ID based on input type
-      let falModelId = model.providerModelId;
-      if (imageUrl && modelId === 'kling_3') {
-        falModelId = 'fal-ai/kling-video/v2.1/standard/image-to-video';
-      }
-      if (imageUrl && modelId === 'pika_2_2') {
-        falModelId = 'fal-ai/pika/v2.2/image-to-video';
+      // Image diya hai toh image-to-video map check karo
+      if (imageUrl && FAL_IMAGE_TO_VIDEO_MAP[modelId]) {
+        falModelId = FAL_IMAGE_TO_VIDEO_MAP[modelId]; // ← let nahi, sirf reassign
       }
 
-      const falPayload: Record<string, unknown> = {
+      const input: Record<string, unknown> = {
         prompt,
-        duration: String(duration || 5),
+        duration: duration || 5,
         aspect_ratio: aspectRatio || '16:9',
       };
-      if (imageUrl) falPayload.image_url = imageUrl;
+      if (imageUrl) input.image_url = imageUrl;
 
       const falRes = await fetch(`https://queue.fal.run/${falModelId}`, {
         method: 'POST',
         headers: {
-          Authorization: `Key ${apiKey}`,
+          Authorization: `Key ${falKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input: falPayload }),
+        body: JSON.stringify({ input }), // ← falPayload bug fixed
       });
 
       if (!falRes.ok) {
@@ -59,7 +68,7 @@ export async function POST(request: NextRequest) {
       jobId = falData.request_id;
     }
 
-    // ─── GOOGLE VEO 3 ────────────────────────────────────────────
+    // ─── GOOGLE VEO 3 ────────────────────────────────────────
     else if (model.provider === 'gemini') {
       const geminiKey = process.env.GEMINI_API_KEY;
       if (!geminiKey) return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 });
@@ -85,10 +94,10 @@ export async function POST(request: NextRequest) {
       }
 
       const geminiData = await geminiRes.json();
-      jobId = geminiData.name; // operation name acts as job ID
+      jobId = geminiData.name;
     }
 
-    // ─── RUNWAY GEN-4 ────────────────────────────────────────────
+    // ─── RUNWAY GEN-4 ────────────────────────────────────────
     else if (model.provider === 'runway') {
       const runwayKey = process.env.RUNWAY_API_KEY;
       if (!runwayKey) return NextResponse.json({ error: 'RUNWAY_API_KEY not configured' }, { status: 500 });
@@ -120,13 +129,12 @@ export async function POST(request: NextRequest) {
       jobId = runwayData.id;
     }
 
-    // ─── JOGG AI ─────────────────────────────────────────────────
+    // ─── JOGG AI ───────────────────────────────────────────
     else if (model.provider === 'jogg') {
       const joggKey = process.env.JOGG_AI_API_KEY;
       if (!joggKey) return NextResponse.json({ error: 'JOGG_AI_API_KEY not configured' }, { status: 500 });
 
       const { avatar_id, voice_id } = body;
-
       if (!avatar_id) {
         return NextResponse.json({ error: 'avatar_id is required for Jogg AI' }, { status: 400 });
       }
@@ -142,43 +150,30 @@ export async function POST(request: NextRequest) {
         script: prompt,
         aspect_ratio: aspectRatioMap[aspectRatio || '16:9'] || 1,
       };
-
-      if (voice_id) {
-        (joggPayload as Record<string, unknown>).voice_id = voice_id;
-      }
+      if (voice_id) (joggPayload as Record<string, unknown>).voice_id = voice_id;
 
       const joggRes = await fetch('https://api.jogg.ai/v1/create', {
         method: 'POST',
-        headers: {
-          'x-api-key': joggKey,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'x-api-key': joggKey, 'Content-Type': 'application/json' },
         body: JSON.stringify(joggPayload),
       });
 
       if (!joggRes.ok) {
         const errText = await joggRes.text();
         console.error(`Jogg AI error: ${joggRes.status} - ${errText}`);
-        return NextResponse.json({
-          error: `Jogg AI error: ${joggRes.status} - ${errText}`
-        }, { status: 500 });
+        return NextResponse.json({ error: `Jogg AI error: ${joggRes.status} - ${errText}` }, { status: 500 });
       }
 
       const joggData = await joggRes.json();
       jobId = joggData.data?.video_id;
-
       if (!jobId) {
-        return NextResponse.json({
-          error: 'No video_id returned from Jogg AI'
-        }, { status: 500 });
+        return NextResponse.json({ error: 'No video_id returned from Jogg AI' }, { status: 500 });
       }
-    }
-
-    else {
+    } else {
       return NextResponse.json({ error: 'Provider not yet implemented' }, { status: 501 });
     }
 
-    // ─── LOG TO SUPABASE ─────────────────────────────────────────
+    // ─── LOG TO SUPABASE ────────────────────────────────────
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && userId) {
       await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/video_generations`, {
         method: 'POST',
@@ -199,7 +194,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, jobId: jobId!, provider });
+    return NextResponse.json({ success: true, jobId, falModelId, provider });
   } catch (error) {
     console.error('Video generation error:', error);
     return NextResponse.json({ error: 'Video generation failed. Please try again.' }, { status: 500 });
